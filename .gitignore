@@ -4,3 +4,6 @@
 
 ; Visual Studio files
 *.suo
+
+; Generated files
+*.map

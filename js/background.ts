@@ -3,9 +3,6 @@
 
 module manager {
 
-	var SHIFT = 16;
-	var CTRL = 17;
-
 	export var history: { [key: number]: HistoryList; };
 	export var currentTabId: { [key: number]: number; };
 	export var currentTabIndex: { [key: number]: number; };
@@ -13,9 +10,10 @@ module manager {
 	export var ctrlDown: boolean;
 	export var shiftDown: boolean;
 
-	export function onInstall() {
-		settings.init();
-	}
+	var SHIFT = 16;
+	var CTRL = 17;
+
+	/* Public Functions */
 
 	export function init() {
 		manager.ctrlDown = false;
@@ -41,10 +39,23 @@ module manager {
 		chrome.runtime.onMessage.addListener(_onMessage);
 	}
 
+	export function onInstall() {
+		settings.init();
+	}
+
 	/* Private Functions */
 
-	function _isSpeeddial(tab: Tab) {
-		return tab.url === 'opera://startpage/';
+	function _createCurrentTabs(tabs: Tab[]) {
+		tabs.forEach((tab) => {
+			manager.currentTabId[tab.windowId] = tab.id;
+			manager.currentTabIndex[tab.windowId] = tab.index;
+		});
+	}
+	
+	function _createHistories(windows: BrowserWindow[]) {
+		windows.forEach((window) => {
+			manager.history[window.id] = new HistoryList();
+		});
 	}
 
 	function _getNextTabIndex(neighborId: number, callback: (index: number, windowId: number) => any) {
@@ -55,92 +66,6 @@ module manager {
 		chrome.tabs.get(neighborId, (neighbor) => {
 			callback(neighbor.index + 1, neighbor.windowId);
 		});
-	}
-
-	function _moveNextToTab(tab: Tab, neighbor: Tab, callback?: (tab: Tab) => any);
-	function _moveNextToTab(tab: Tab, neighborId: number, callback?: (tab: Tab) => any);
-	function _moveNextToTab(tab: Tab, neighborId: any, callback?: (tab: Tab) => any) {
-		if (neighborId === null) {
-			return;
-		}
-
-		if (typeof(neighborId) === 'number') {
-			_getNextTabIndex(neighborId, (index, windowId) => {
-				if (tab.index !== index || tab.windowId !== windowId) {
-					chrome.tabs.move(tab.id, { index: index, windowId: windowId }, callback);
-				}
-			});
-		} else {
-			var neighbor = <Tab>neighborId;
-			if (tab.index !== neighbor.index + 1 || tab.windowId !== neighbor.windowId) {
-				chrome.tabs.move(tab.id, { index: neighbor.index + 1, windowId: neighbor.windowId }, callback);
-			}
-		}
-	}
-
-	function _moveToEnd(tab: Tab, windowId?: number, callback?: (tab: Tab) => any) {
-		if (typeof(windowId) === 'undefined') {
-			windowId = tab.windowId;
-		}
-		chrome.tabs.move(tab.id, { index: -1, windowId: windowId }, callback);
-	}
-
-	function _moveOtherToEnd(tab: Tab, windowId?: number, callback?: (tab: Tab) => any) {
-		if (typeof(windowId) === 'undefined') {
-			windowId = tab.windowId;
-		}
-
-		var history = manager.history[windowId];
-		if (_isSpeeddial(tab)) {
-			_moveNextToTab(tab, history.first, callback);
-		} else {
-			_moveToEnd(tab, windowId, callback);
-		}
-	}
-
-	function _createHistories(windows: BrowserWindow[]) {
-		windows.forEach((window) => {
-			manager.history[window.id] = new HistoryList();
-		});
-	}
-
-	function _createCurrentTabs(tabs: Tab[]) {
-		tabs.forEach((tab) => {
-			manager.currentTabId[tab.windowId] = tab.id;
-			manager.currentTabIndex[tab.windowId] = tab.index;
-		});
-	}
-
-
-	function _onWindowCreated(window: BrowserWindow) {
-		manager.history[window.id] = new HistoryList();
-	}
-
-	function _onWindowRemoved(windowId: number) {
-		delete manager.history[windowId];
-		delete manager.currentTabId[windowId];
-		delete manager.currentTabIndex[windowId];
-	}
-
-	function _onTabCreated(tab: Tab) {
-		_handleCreatedTabMovement(tab);
-
-		if (settings.preventNewWindow && shiftDown && tab.openerTabId !== undefined) {
-			// If tab opened in a new window while holding Shift, move it back.
-			chrome.tabs.get(tab.openerTabId, (opener) => {
-				if (tab.windowId !== opener.windowId) {
-					_moveToOpenerWindow(tab, opener);
-				}
-			});
-		}
-
-		if (settings.focusOnOpen === 'always' && !tab.active && tab.openerTabId !== undefined) {
-			if (settings.exceptCtrl && ctrlDown) {
-				return;
-			}
-
-			chrome.tabs.update(tab.id, { active: true });
-		}
 	}
 
 	function _handleCreatedTabMovement(tab: Tab) {
@@ -164,6 +89,51 @@ module manager {
 		} else {
 			history.append(tab.id);
 		}
+	}
+
+	function _isSpeeddial(tab: Tab) {
+		return tab.url === 'opera://startpage/';
+	}
+
+	function _moveNextToTab(tab: Tab, neighbor: Tab, callback?: (tab: Tab) => any);
+	function _moveNextToTab(tab: Tab, neighborId: number, callback?: (tab: Tab) => any);
+	function _moveNextToTab(tab: Tab, neighborId: any, callback?: (tab: Tab) => any) {
+		if (neighborId === null) {
+			return;
+		}
+
+		if (typeof(neighborId) === 'number') {
+			_getNextTabIndex(neighborId, (index, windowId) => {
+				if (tab.index !== index || tab.windowId !== windowId) {
+					chrome.tabs.move(tab.id, { index: index, windowId: windowId }, callback);
+				}
+			});
+		} else {
+			var neighbor = <Tab>neighborId;
+			if (tab.index !== neighbor.index + 1 || tab.windowId !== neighbor.windowId) {
+				chrome.tabs.move(tab.id, { index: neighbor.index + 1, windowId: neighbor.windowId }, callback);
+			}
+		}
+	}
+
+	function _moveOtherToEnd(tab: Tab, windowId?: number, callback?: (tab: Tab) => any) {
+		if (typeof(windowId) === 'undefined') {
+			windowId = tab.windowId;
+		}
+
+		var history = manager.history[windowId];
+		if (_isSpeeddial(tab)) {
+			_moveNextToTab(tab, history.first, callback);
+		} else {
+			_moveToEnd(tab, windowId, callback);
+		}
+	}
+
+	function _moveToEnd(tab: Tab, windowId?: number, callback?: (tab: Tab) => any) {
+		if (typeof(windowId) === 'undefined') {
+			windowId = tab.windowId;
+		}
+		chrome.tabs.move(tab.id, { index: -1, windowId: windowId }, callback);
 	}
 
 	function _moveToOpenerWindow(tab: Tab, opener: Tab) {
@@ -194,6 +164,76 @@ module manager {
 					_moveNextToTab(tab, opener, _focus);
 				}
 				break;
+		}
+	}
+
+	function _onMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: Function) {
+		switch (message.action) {
+			case 'up':
+				if (message.key === CTRL) {
+					ctrlDown = false;
+				} else if (message.key === SHIFT) {
+					shiftDown = false;
+				}
+				break;
+
+			case 'down':
+				if (message.key === CTRL) {
+					ctrlDown = true;
+				} else if (message.key === SHIFT) {
+					shiftDown = true;
+				}
+				break;
+		}
+	}
+	
+	function _onTabActivated(activeInfo: chrome.tabs.TabActiveInfo) {
+		// Delay changing history since a new tab gets activated first
+		// when a tab is being removed, then the tabRemoved event fires.
+		chrome.tabs.get(activeInfo.tabId, (tab) => {
+			var history = manager.history[tab.windowId];
+			history.insert(tab.id);
+
+			manager.currentTabId[tab.windowId] = tab.id;
+			manager.currentTabIndex[tab.windowId] = tab.index;
+		});
+	}
+
+	function _onTabAttached(tabId: number, attachInfo: chrome.tabs.TabAttachInfo) {
+		var history = manager.history[attachInfo.newWindowId];
+		history.insert(tabId);
+	}
+
+	function _onTabCreated(tab: Tab) {
+		_handleCreatedTabMovement(tab);
+
+		if (settings.preventNewWindow && shiftDown && tab.openerTabId !== undefined) {
+			// If tab opened in a new window while holding Shift, move it back.
+			chrome.tabs.get(tab.openerTabId, (opener) => {
+				if (tab.windowId !== opener.windowId) {
+					_moveToOpenerWindow(tab, opener);
+				}
+			});
+		}
+
+		if (settings.focusOnOpen === 'always' && !tab.active && tab.openerTabId !== undefined) {
+			if (settings.exceptCtrl && ctrlDown) {
+				return;
+			}
+
+			chrome.tabs.update(tab.id, { active: true });
+		}
+	}
+
+	function _onTabDetached(tabId: number, detachInfo: chrome.tabs.TabDetachInfo) {
+		var history = manager.history[detachInfo.oldWindowId];
+		history.remove(tabId);
+	}
+
+	function _onTabMoved(tabId: number, moveInfo: chrome.tabs.TabMoveInfo) {
+		// If the moved tab was active, update the currentTabIndex
+		if (manager.currentTabId[moveInfo.windowId] === tabId) {
+			manager.currentTabIndex[moveInfo.windowId] = moveInfo.toIndex;
 		}
 	}
 
@@ -236,56 +276,19 @@ module manager {
 		history.remove(id);
 	}
 
-	function _onTabMoved(tabId: number, moveInfo: chrome.tabs.TabMoveInfo) {
-		// If the moved tab was active, update the currentTabIndex
-		if (manager.currentTabId[moveInfo.windowId] === tabId) {
-			manager.currentTabIndex[moveInfo.windowId] = moveInfo.toIndex;
-		}
+	function _onWindowCreated(window: BrowserWindow) {
+		manager.history[window.id] = new HistoryList();
 	}
 
-	function _onTabActivated(activeInfo: chrome.tabs.TabActiveInfo) {
-		// Delay changing history since a new tab gets activated first
-		// when a tab is being removed, then the tabRemoved event fires.
-		chrome.tabs.get(activeInfo.tabId, (tab) => {
-			var history = manager.history[tab.windowId];
-			history.insert(tab.id);
-
-			manager.currentTabId[tab.windowId] = tab.id;
-			manager.currentTabIndex[tab.windowId] = tab.index;
-		});
+	function _onWindowRemoved(windowId: number) {
+		delete manager.history[windowId];
+		delete manager.currentTabId[windowId];
+		delete manager.currentTabIndex[windowId];
 	}
 
-	function _onTabDetached(tabId: number, detachInfo: chrome.tabs.TabDetachInfo) {
-		var history = manager.history[detachInfo.oldWindowId];
-		history.remove(tabId);
-	}
-
-	function _onTabAttached(tabId: number, attachInfo: chrome.tabs.TabAttachInfo) {
-		var history = manager.history[attachInfo.newWindowId];
-		history.insert(tabId);
-	}
-
-	function _onMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: Function) {
-		switch (message.action) {
-			case 'up':
-				if (message.key === CTRL) {
-					ctrlDown = false;
-				} else if (message.key === SHIFT) {
-					shiftDown = false;
-				}
-				break;
-
-			case 'down':
-				if (message.key === CTRL) {
-					ctrlDown = true;
-				} else if (message.key === SHIFT) {
-					shiftDown = true;
-				}
-				break;
-		}
-	}
 }
 
+/* Initialization */
 
 chrome.runtime.onInstalled.addListener(manager.onInstall);
 manager.init();
