@@ -1,0 +1,6 @@
+; Visual Studio directories
+/bin/
+/obj/
+
+; Visual Studio files
+*.suo

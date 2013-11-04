@@ -1,0 +1,15 @@
+﻿code {
+  font-weight: normal;
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid #dddddd;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+span.row label {
+  margin: 0;
+  margin-right: 1.0rem;
+}
+input[type=radio] {
+  margin-top: 0;
+}
