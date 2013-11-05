@@ -27,10 +27,13 @@
 		<section>
 			<h3>When opening a tab</h3>
 			<p>
-				<label><input type="radio" name="onOpen" value="nextToActive"> Open all tabs next to the active tab</label>
-				<label><input type="radio" name="onOpen" value="default"> Open new tabs except Speed Dial next to the active tab</label>
+				<span class="row">
+					<label><input type="radio" name="onOpen" value="nextToActive"> Open all tabs next to the active tab, </label>
+					<label><input type="checkbox" name="openInOrder">and place consecutive new tabs in order</label>
+				</span>
 				<label><input type="radio" name="onOpen" value="atEnd"> Open all tabs at the end of the tab bar</label>
 				<label><input type="radio" name="onOpen" value="otherAtEnd"> Open Speed Dial next to the active tab, open other tabs at the end</label>
+				<label><input type="radio" name="onOpen" value="default"> Let the browser decide (opens new tabs except Speed Dial next to the active tab)</label>
 			</p>
 		</section>
 
@@ -40,7 +43,7 @@
 				<label><input type="radio" name="onClose" value="lastfocused"> Activate the last active tab</label>
 				<label><input type="radio" name="onClose" value="next"> Activate the next tab</label>
 				<label><input type="radio" name="onClose" value="previous"> Activate the previous tab</label>
-				<label><input type="radio" name="onClose" value="default"> Let Opera decide</label>
+				<label><input type="radio" name="onClose" value="default"> Let the browser decide</label>
 			</p>
 		</section>
 
@@ -51,7 +54,7 @@
 					<label><input type="radio" name="focusOnOpen" value="always"> Focus the new tab, </label>
 					<label><input type="checkbox" name="exceptCtrl"> except when holding <code>Ctrl</code></label>
 				</span>
-				<label><input type="radio" name="focusOnOpen" value="default"> Let Opera decide</label>
+				<label><input type="radio" name="focusOnOpen" value="default"> Let the browser decide</label>
 			</p>
 			<p>
 				<label><input type="checkbox" name="preventNewWindow"> <code>Shift+click</code> opens tabs in the same window</label>
@@ -65,7 +68,20 @@
 		</section>
 
 		<section>
+			<h3>Keyboard shortcuts</h3>
+			<p style="display: none"><!-- Can't hook into Ctrl+PageUp/PageDown for some reason -->
+				<label><input type="checkbox" name="enableTabCycle"> Use <code>Ctrl+PageUp</code> and <code>Ctrl+PageDown</code> to cycle tabs.</label>
+			</p>
+		</section>
+
+		<section>
 			<h3>FAQs</h3>
+
+			<h4>I broke something!</h4>
+			<p>
+				Tell me about it on <a href="https://github.com/ChaosinaCan/ClassicTabs">Github</a>. You can use Opera's
+				addons site too, but Github is much easier for me to work with.
+			</p>
 
 			<h4>Can you make Ctrl+T open tabs next to the active tab, but the New Tab button open them at the end?</h4>
 			<p>
@@ -74,7 +90,10 @@
 			</p>
 
 			<h4>Can you make <code>&lt;keyboard shortcut&gt;</code> do <code>&lt;cool feature&gt;</code>?</h4>
-			<p>Not yet. Opera needs to implement the chrome.commands API first.</p>
+			<p>
+				Maybe. Opera has implemented the chrome.commands API, but key combinations can't yet be customized,
+				and some functions (such as reopening close tabs) aren't available to extensions.
+			</p>
 
 			<h4>Can you make Ctrl+Tab cycle through tabs in last-visited order?</h4>
 			<p>

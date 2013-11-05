@@ -1,4 +1,8 @@
 ﻿var SettingStorage = (function () {
+    /**
+    * @param defaults A map containing setting names and their default values
+    * @param options Configuration options
+    */
     function SettingStorage(defaults, options) {
         this.defaults = {};
         this.initSetting = '__initialized__';
@@ -160,3 +164,8 @@
     };
     return SettingStorage;
 })();
+
+function CreateStorage(defaults, options) {
+    return new SettingStorage(defaults, options);
+}
+//@ sourceMappingURL=storage.js.map

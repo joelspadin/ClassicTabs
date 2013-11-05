@@ -1,25 +1,42 @@
-/// <reference path="settings.ts" />
+﻿/// <reference path="settings.ts" />
 /// <reference path="chrome.d.ts" />
 var manager;
 (function (manager) {
+    /* Public Fields */
     manager.history;
     manager.currentTabId;
     manager.currentTabIndex;
+    manager.inOrderTabId;
 
     manager.ctrlDown;
     manager.shiftDown;
+    manager.ignoreTabActivation;
 
+    /* Private Fields */
     var SHIFT = 16;
     var CTRL = 17;
+
+    var COMMANDS = {
+        "tab_left": {
+            enableSetting: 'enableTabCycle',
+            callback: _cycleTabLeft
+        },
+        "tab_right": {
+            enableSetting: 'enableTabCycle',
+            callback: _cycleTabRight
+        }
+    };
 
     /* Public Functions */
     function init() {
         manager.ctrlDown = false;
         manager.shiftDown = false;
+        manager.ignoreTabActivation = false;
 
         manager.history = {};
         manager.currentTabId = {};
         manager.currentTabIndex = {};
+        manager.inOrderTabId = {};
 
         chrome.windows.getAll(_createHistories);
         chrome.tabs.query({ active: true }, _createCurrentTabs);
@@ -34,6 +51,7 @@ var manager;
         chrome.tabs.onDetached.addListener(_onTabDetached);
         chrome.tabs.onAttached.addListener(_onTabAttached);
 
+        chrome.commands.onCommand.addListener(_onCommand);
         chrome.runtime.onMessage.addListener(_onMessage);
     }
     manager.init = init;
@@ -44,6 +62,15 @@ var manager;
     manager.onInstall = onInstall;
 
     /* Private Functions */
+    function _addToHistory(tab) {
+        var history = manager.history[tab.windowId];
+        history.insert(tab.id);
+
+        manager.currentTabId[tab.windowId] = tab.id;
+        manager.currentTabIndex[tab.windowId] = tab.index;
+        manager.inOrderTabId[tab.windowId] = tab.id;
+    }
+
     function _createCurrentTabs(tabs) {
         tabs.forEach(function (tab) {
             manager.currentTabId[tab.windowId] = tab.id;
@@ -55,6 +82,12 @@ var manager;
         windows.forEach(function (window) {
             manager.history[window.id] = new HistoryList();
         });
+    }
+
+    function _cycleTabLeft() {
+    }
+
+    function _cycleTabRight() {
     }
 
     function _getNextTabIndex(neighborId, callback) {
@@ -71,7 +104,18 @@ var manager;
         var history = manager.history[tab.windowId];
         switch (settings.onOpen) {
             case 'nextToActive':
-                _moveNextToTab(tab, history.first);
+                if (settings.openInOrder && manager.inOrderTabId[tab.windowId] != null) {
+                    chrome.tabs.get(manager.inOrderTabId[tab.windowId], function (prevTab) {
+                        if (tab && tab.openerTabId === history.first) {
+                            _moveNextToTab(tab, prevTab.id);
+                        } else {
+                            _moveNextToTab(tab, history.first);
+                        }
+                        manager.inOrderTabId[tab.windowId] = tab.id;
+                    });
+                } else {
+                    _moveNextToTab(tab, history.first);
+                }
                 break;
 
             case 'atEnd':
@@ -164,6 +208,18 @@ var manager;
         }
     }
 
+    function _onCommand(command) {
+        var def = COMMANDS[command];
+        if (def) {
+            console.log(command, def);
+            if (!('enableSetting' in def) || settings.get(def.enableSetting)) {
+                def.callback.call(null);
+            }
+        } else {
+            console.error('Unknown keyboard command: ' + command);
+        }
+    }
+
     function _onMessage(message, sender, sendResponse) {
         switch (message.action) {
             case 'up':
@@ -188,11 +244,11 @@ var manager;
         // Delay changing history since a new tab gets activated first
         // when a tab is being removed, then the tabRemoved event fires.
         chrome.tabs.get(activeInfo.tabId, function (tab) {
-            var history = manager.history[tab.windowId];
-            history.insert(tab.id);
-
-            manager.currentTabId[tab.windowId] = tab.id;
-            manager.currentTabIndex[tab.windowId] = tab.index;
+            if (manager.ignoreTabActivation) {
+                manager.ignoreTabActivation = false;
+            } else {
+                _addToHistory(tab);
+            }
         });
     }
 
@@ -242,8 +298,14 @@ var manager;
             case 'lastfocused':
                 var newTab = history.second;
                 if (wasActive && newTab) {
-                    chrome.tabs.update(newTab, { active: true });
+                    chrome.tabs.update(newTab, { active: true }, function (tab) {
+                        if (tab) {
+                            _addToHistory(tab);
+                        }
+                    });
                 }
+
+                manager.ignoreTabActivation = true;
                 break;
 
             case 'next':
@@ -260,10 +322,15 @@ var manager;
                         index: index
                     }, function (tabs) {
                         if (tabs.length > 0) {
-                            chrome.tabs.update(tabs[0].id, { active: true });
+                            chrome.tabs.update(tabs[0].id, { active: true }, function (tab) {
+                                if (tab) {
+                                    _addToHistory(tab);
+                                }
+                            });
                         }
                     });
                 }
+                manager.ignoreTabActivation = true;
                 break;
         }
 
@@ -272,12 +339,23 @@ var manager;
 
     function _onWindowCreated(window) {
         manager.history[window.id] = new HistoryList();
+
+        if (!(window.id in manager.currentTabId)) {
+            manager.currentTabId[window.id] = null;
+        }
+        if (!(window.id in manager.currentTabIndex)) {
+            manager.currentTabIndex[window.id] = null;
+        }
+        if (!(window.id in manager.inOrderTabId)) {
+            manager.inOrderTabId[window.id] = null;
+        }
     }
 
     function _onWindowRemoved(windowId) {
         delete manager.history[windowId];
         delete manager.currentTabId[windowId];
         delete manager.currentTabIndex[windowId];
+        delete manager.inOrderTabId[windowId];
     }
 })(manager || (manager = {}));
 
@@ -357,8 +435,10 @@ var HistoryList = (function () {
     HistoryList.prototype.remove = function (id) {
         var toRemove = this._findNode(id);
 
-        this._detachNode(toRemove);
-        delete this._map[id];
+        if (toRemove) {
+            this._detachNode(toRemove);
+            delete this._map[id];
+        }
     };
 
     /** Converts the current history list to an array of tab ids */
@@ -394,7 +474,7 @@ var HistoryList = (function () {
         return this._map[id];
     };
 
-    /** Detaches a node without changing its lastPrev reference */
+    /** Detaches a node */
     HistoryList.prototype._detachNode = function (node) {
         var before = node.prev;
         var after = node.next;

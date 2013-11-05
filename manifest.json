@@ -1,6 +1,6 @@
 {
 	"name": "Classic Tabs",
-	"version": "1.4",
+	"version": "1.5",
 	"manifest_version": 2,
 	
 	"description": "Emulates Opera 12 tab behaviors",
@@ -27,11 +27,25 @@
 			"js": ["js/include/keys.js"]
 		}
 	],
+	"commands": {
+		"tab_left": {
+			"suggested_key": {
+				"windows": "Ctrl+Shift+PageUp",
+				"mac": "Command+PageUp"
+			},
+			"description": "Cycle one tab to the left"
+		},
+		"tab_right": {
+			"suggested_key": {
+				"windows": "Ctrl+Shift+PageDown",
+				"mac": "Command+PageDown"
+			},
+			"description": "Cycle one tab to the right"
+		}
+	},
 	"content_security_policy": "default-src 'self'",
 	"incognito": "spanning",
 	"offline_enabled": true,
 	"options_page": "options-page.html",
-	"permissions": [
-		"tabs", "bookmarks"
-	]
+	"permissions": [ "tabs" ]
 }

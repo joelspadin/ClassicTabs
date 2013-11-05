@@ -1,4 +1,5 @@
-﻿var SHIFT = 16;
+﻿/// <reference path="../chrome.d.ts" />
+var SHIFT = 16;
 var CTRL = 17;
 
 window.addEventListener('keydown', function (e) {
@@ -18,3 +19,4 @@ window.addEventListener('keyup', function (e) {
         });
     }
 });
+//@ sourceMappingURL=keys.js.map

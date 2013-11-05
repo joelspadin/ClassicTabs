@@ -5,7 +5,37 @@
 	useAccessors?: boolean;
 }
 
-class SettingStorage {
+interface ISettingStorageBase {
+	defaults: { [key: string]: any; };
+	initSetting: string;
+	prefix: string;
+	storage: Storage;
+	useAccessors: boolean;
+	/** Returns true if this is the first time the extension has been run. */
+	firstRun: boolean;
+
+	/** Initializes storage and sets any uninitialized settings to their default values.
+	 * This should be called once when the extension starts. */
+	init();
+	/** Gets the value of a setting */
+	get (key: string): any;
+	/** Sets the value of a setting */
+	set (key: string, value: any);
+	/** Returns a map containing all settings and their current values */
+	getAll(): { [key: string]: any; };
+	/** Sets the values of one or more settings */
+	setAll(setting: { [key: string]: any; });
+	/** Returns true if a setting with the given name exists */
+	isDefined(key: string): bool;
+	/** Reset a setting to its default value */
+	reset(key: string);
+	/** Resets all settings to their default values */
+	resetAll();
+}
+
+interface ISettingStorage extends ISettingStorageBase { }
+
+class SettingStorage implements ISettingStorageBase {
 
 	defaults: { [key: string]: any; } = {};
 	initSetting: string = '__initialized__';
@@ -18,6 +48,10 @@ class SettingStorage {
 		return this._firstRun;
 	}
 
+	/**
+	 * @param defaults A map containing setting names and their default values
+	 * @param options Configuration options
+	 */
 	constructor(defaults?: { [key: string]: any; }, options?: SettingStorageOptions) {
 		var self = this;
 
@@ -146,4 +180,8 @@ class SettingStorage {
 
 		Object.defineProperties(this, descriptors);
 	}
+}
+
+function CreateStorage(defaults?: { [key: string]: any; }, options?: SettingStorageOptions): ISettingStorage {
+	return <ISettingStorage><any> new SettingStorage(defaults, options);
 }

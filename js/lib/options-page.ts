@@ -1,4 +1,5 @@
 ﻿/// <reference path="storage.d.ts" />
+/// <reference path="../chrome.d.ts" />
 
 interface Element {
 	dataset: any;
@@ -8,7 +9,8 @@ interface Window {
 	optionsPage: OptionsPage;
 }
 
-declare var chrome: any;
+// Comment this out if using chrome.d.ts
+// declare var chrome: any;
 
 class OptionsPage {
 
@@ -85,7 +87,7 @@ class OptionsPage {
 
 	/** Gets the value of a set of radio buttons */
 	static getRadioValue(element: HTMLElement): string {
-		var inputs = element.ownerDocument.querySelectorAll('input[type=radio][name="' + element.getAttribute('name') + '"]');
+		var inputs = (<any>element).ownerDocument.querySelectorAll('input[type=radio][name="' + element.getAttribute('name') + '"]');
 		for (var i = 0; i < inputs.length; i++) {
 			var input = <HTMLInputElement>inputs[i];
 			if (input.checked) {
@@ -624,7 +626,7 @@ class ModalDialog {
 // Automatically intialize things on startup
 
 window.optionsPage = null;
-document.title = chrome.app.getDetails().name + ' Settings';
+document.title = chrome.runtime.getManifest()['name'] + ' Settings';
 
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -648,7 +650,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Fill elements with data from the extension manifest
-	var manifest = chrome.app.getDetails();
+	var manifest = chrome.runtime.getManifest();
 
 	var fields = document.querySelectorAll('[data-manifest]');
 	for (var i = 0; i < fields.length; i++) {
