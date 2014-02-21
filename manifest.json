@@ -31,14 +31,16 @@
 		"tab_left": {
 			"suggested_key": {
 				"windows": "Ctrl+Shift+PageUp",
-				"mac": "Command+PageUp"
+				"mac": "Command+PageUp",
+				"linux": "Ctrl+Shift+PageUp"
 			},
 			"description": "Cycle one tab to the left"
 		},
 		"tab_right": {
 			"suggested_key": {
 				"windows": "Ctrl+Shift+PageDown",
-				"mac": "Command+PageDown"
+				"mac": "Command+PageDown",
+				"linux": "Ctrl+Shift+PageDown"
 			},
 			"description": "Cycle one tab to the right"
 		}
