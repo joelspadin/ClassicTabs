@@ -1,4 +1,4 @@
-﻿/// <reference path="../chrome.d.ts" />
+﻿/// <reference path="../lib/chrome.d.ts" />
 var SHIFT = 16;
 var CTRL = 17;
 
@@ -19,4 +19,4 @@ window.addEventListener('keyup', function (e) {
         });
     }
 });
-//@ sourceMappingURL=keys.js.map
+//# sourceMappingURL=keys.js.map

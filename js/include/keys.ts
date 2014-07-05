@@ -1,5 +1,4 @@
-﻿/// <reference path="../chrome.d.ts" />
-
+﻿/// <reference path="../lib/chrome.d.ts" />
 
 var SHIFT = 16;
 var CTRL = 17;

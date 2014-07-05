@@ -1,11 +1,14 @@
-﻿/// <reference path="lib/storage.d.ts" />
-var settings = CreateStorage({
+﻿/// <reference path="lib/storage.ts" />
+
+var settings = CreateSettings({
     onOpen: 'default',
     onClose: 'lastfocused',
     focusOnOpen: 'default',
     enableTabCycle: false,
     exceptCtrl: true,
+    exceptShift: false,
     openInOrder: false,
-    preventNewWindow: true
+    preventNewWindow: true,
+    preventWindowPopups: false
 });
-//@ sourceMappingURL=settings.js.map
+//# sourceMappingURL=settings.js.map

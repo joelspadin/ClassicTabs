@@ -1,16 +1,19 @@
-﻿/// <reference path="storage.d.ts" />
-/// <reference path="../chrome.d.ts" />
+﻿/// <reference path="storage.ts" />
+/// <reference path="chrome.d.ts" />
 
-interface Element {
-	dataset: any;
+interface DOMStringMap {
+	reset: string;
+	manifest: string;
+	msg: string;
 }
 
 interface Window {
 	optionsPage: OptionsPage;
 }
 
-// Comment this out if using chrome.d.ts
-// declare var chrome: any;
+interface HTMLElement {
+	ownerDocument: Document;
+}
 
 class OptionsPage {
 
@@ -87,7 +90,7 @@ class OptionsPage {
 
 	/** Gets the value of a set of radio buttons */
 	static getRadioValue(element: HTMLElement): string {
-		var inputs = (<any>element).ownerDocument.querySelectorAll('input[type=radio][name="' + element.getAttribute('name') + '"]');
+		var inputs = element.ownerDocument.querySelectorAll('input[type=radio][name="' + element.getAttribute('name') + '"]');
 		for (var i = 0; i < inputs.length; i++) {
 			var input = <HTMLInputElement>inputs[i];
 			if (input.checked) {
@@ -334,7 +337,7 @@ class OptionsPage {
 	private _setupAllResetButtons() {
 		var resets = this.document.querySelectorAll('[data-reset]');
 		for (var i = 0; i < resets.length; i++) {
-			var elementNames = (<HTMLElement>resets[i]).dataset.reset.split(' ');
+			var elementNames = (<HTMLElement>resets[i]).dataset['reset'].split(' ');
 			var elements = [];
 			elementNames.forEach((name) => {
 				elements = elements.concat(Array.prototype.slice.call(document.getElementsByName(name)));
@@ -547,7 +550,7 @@ class ModalDialog {
 
 	constructor(title: string, text: string, ...buttons: ModalButton[]);
 	constructor(title: string, text: string, onclose: Function, ...buttons: ModalButton[]);
-	constructor(title: string, text: string, onclose: any) {
+	constructor(title: string, text: string, onclose?: any) {
 		var buttons: ModalButton[];
 		if (typeof onclose === 'function') {
 			buttons = Array.prototype.slice.call(arguments, [3]);
@@ -623,12 +626,39 @@ class ModalDialog {
 }
 
 
+// Localization functions
+
+function localize(message: string, ...substitutions: string[]) {
+	return chrome.i18n.getMessage(message, substitutions);
+}
+
+module i18n {
+	export function translate(elem: HTMLElement, msg?: string) {
+		msg = msg || elem.dataset.msg;
+		elem.textContent = chrome.i18n.getMessage(msg);
+	}
+
+	export function localizePage() {
+		var elems = document.querySelectorAll('[data-msg]');
+		for (var i = 0; i < elems.length; i++) {
+			i18n.translate(<HTMLElement>elems[i]);
+		}
+
+		localizeTitle();
+	}
+
+	export function localizeTitle() {
+		document.title = document.title.replace(/__MSG_(.+)__/g, (match, ...groups) => chrome.i18n.getMessage(groups[0]));
+	}
+}
+
 // Automatically intialize things on startup
 
 window.optionsPage = null;
-document.title = chrome.runtime.getManifest()['name'] + ' Settings';
 
 window.addEventListener('DOMContentLoaded', () => {
+	// Localize the page
+	i18n.localizePage();
 
 	// If there is a storage object with a common name, build the options page automatically
 	var names = ['settings', 'storage'];
@@ -636,7 +666,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		if (typeof window[names[i]] !== 'undefined') {
 			var settings = window[names[i]];
-			if (settings instanceof SettingStorage) {
+			if (settings instanceof SettingStorageClass) {
 				window.optionsPage = new OptionsPage(settings);
 				break;
 			}
@@ -650,17 +680,36 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Fill elements with data from the extension manifest
-	var manifest = chrome.runtime.getManifest();
+	var manifest = <any>chrome.runtime.getManifest();
 
 	var fields = document.querySelectorAll('[data-manifest]');
 	for (var i = 0; i < fields.length; i++) {
-		var properties = (<HTMLElement>fields[i]).dataset.manifest.split('.');
-		var current = manifest;
+		var field = <HTMLElement>fields[i];
+		var format: string = field.dataset['format'] || '{0}';
+		var values = [];
 
-		for (var k = 0; k < properties.length; k++) {
-			current = current[properties[k]];
+		field.dataset['manifest'].split(',').forEach((property: string) => {
+			var chunks = property.split('.');
+			var current = manifest;
+
+			try {
+				chunks.forEach((chunk) => {
+					current = current[chunk];
+				});
+			} catch (e) {
+				current = undefined;
+			}
+
+			values.push(current);
+		});
+		
+		if (values.length === 0 || values[0] === undefined) {
+			field.textContent = 'manifest: ' + field.dataset['manifest'];
+		} else {
+			field.textContent = format.replace(/{(\d+)}/g, function (match, ...groups) {
+				var index = groups[0];
+				return (typeof values[index] != 'undefined') ? values[index].toString() : match.toString();
+			});
 		}
-
-		fields[i].textContent = current ? current.toString() : 'manifest: ' + properties.join('.');
 	}
 });

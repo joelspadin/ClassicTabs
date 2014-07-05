@@ -1,9 +1,10 @@
 {
-	"name": "Classic Tabs",
-	"version": "1.5",
+	"name": "__MSG_extension_name__",
+	"version": "1.5.2",
 	"manifest_version": 2,
+	"default_locale": "en",
 	
-	"description": "Emulates Opera 12 tab behaviors",
+	"description": "__MSG_extension_desc__",
 	"developer": {
 		"name": "Joel Spadin",
 		"url": "http://chaosinacan.com"
@@ -49,5 +50,12 @@
 	"incognito": "spanning",
 	"offline_enabled": true,
 	"options_page": "options-page.html",
-	"permissions": [ "tabs" ]
+	"permissions": [ "tabs" ],
+	"web_accessible_resources": [
+		"js/background.js.map",
+		"js/settings.js.map",
+		"js/include/keys.js.map",
+		"js/lib/options-page.js.map",
+		"js/lib/storage.js.map"
+	]
 }

@@ -1,5 +1,5 @@
 ﻿/// <reference path="settings.ts" />
-/// <reference path="chrome.d.ts" />
+/// <reference path="lib/chrome.d.ts" />
 
 module manager {
 
@@ -95,69 +95,73 @@ module manager {
 	}
 
 	function _cycleTabLeft() {
-		//chrome.tabs.query({ currentWindow: true, active: true }, (current?) => {
-		//	if (!current) {
-		//		return;
-		//	}
+		chrome.tabs.query({ currentWindow: true, active: true }, (results?) => {
+			if (results.length == 0) {
+				return;
+			}
 
-		//	chrome.tabs.query({ windowId: current.windowId }, (tabs) => {
-		//		var focusTab: Tab = null;
-		//		var rightTab: Tab = null;
-		//		var rightIndex = -1;
+			var current = results[0];
 
-		//		// Find the next tab to the left
-		//		for (var i = 0; i < tabs.length; ++i) {
-		//			if (tabs[i].index === current.index - 1) {
-		//				focusTab = tabs[i];
-		//				break;
-		//			}
+			chrome.tabs.query({ windowId: current.windowId }, (tabs) => {
+				var focusTab: Tab = null;
+				var rightTab: Tab = null;
+				var rightIndex = -1;
 
-		//			if (tabs[i].index > rightIndex) {
-		//				rightTab = tabs[i];
-		//				rightIndex = rightTab.index;
-		//			}
-		//		}
+				// Find the next tab to the left
+				for (var i = 0; i < tabs.length; ++i) {
+					if (tabs[i].index === current.index - 1) {
+						focusTab = tabs[i];
+						break;
+					}
 
-		//		// If no tab found, wrap to the last tab on the right
-		//		if (focusTab === null) {
-		//			focusTab = rightTab;
-		//		}
+					if (tabs[i].index > rightIndex) {
+						rightTab = tabs[i];
+						rightIndex = rightTab.index;
+					}
+				}
 
-		//		chrome.tabs.update(focusTab.id, { active: true });
-		//	})
-		//});
+				// If no tab found, wrap to the last tab on the right
+				if (focusTab === null) {
+					focusTab = rightTab;
+				}
+
+				chrome.tabs.update(focusTab.id, { active: true });
+			})
+		});
 	}
 
 	function _cycleTabRight() {
-		//chrome.tabs.query({ currentWindow: true, active: true }, (current?) => {
-		//	if (!current) {
-		//		return;
-		//	}
+		chrome.tabs.query({ currentWindow: true, active: true }, (results?) => {
+			if (results.length == 0) {
+				return;
+			}
 
-		//	chrome.tabs.query({ windowId: current.windowId }, (tabs) => {
-		//		var focusTab: Tab = null;
-		//		var leftTab: Tab = null;
+			var current = results[0];
 
-		//		// Find the next tab to the right
-		//		for (var i = 0; i < tabs.length; ++i) {
-		//			if (tabs[i].index === current.index + 1) {
-		//				focusTab = tabs[i];
-		//				break;
-		//			}
+			chrome.tabs.query({ windowId: current.windowId }, (tabs) => {
+				var focusTab: Tab = null;
+				var leftTab: Tab = null;
 
-		//			if (tabs[i].index === 0) {
-		//				leftTab = tabs[i];
-		//			}
-		//		}
+				// Find the next tab to the right
+				for (var i = 0; i < tabs.length; ++i) {
+					if (tabs[i].index === current.index + 1) {
+						focusTab = tabs[i];
+						break;
+					}
 
-		//		// If no tab found, wrap to the first tab on the left
-		//		if (focusTab === null) {
-		//			focusTab = leftTab;
-		//		}
+					if (tabs[i].index === 0) {
+						leftTab = tabs[i];
+					}
+				}
 
-		//		chrome.tabs.update(focusTab.id, { active: true });
-		//	})
-		//});
+				// If no tab found, wrap to the first tab on the left
+				if (focusTab === null) {
+					focusTab = leftTab;
+				}
+
+				chrome.tabs.update(focusTab.id, { active: true });
+			})
+		});
 	}
 
 	function _getNextTabIndex(neighborId: number, callback: (index: number, windowId: number) => any) {
@@ -174,9 +178,10 @@ module manager {
 		var history = manager.history[tab.windowId];
 		switch (settings.onOpen) {
 			case 'nextToActive':
+				// Open all tabs next to the active tab
 				if (settings.openInOrder && inOrderTabId[tab.windowId] != null) {
 					chrome.tabs.get(inOrderTabId[tab.windowId], (prevTab) => {
-						if (tab && tab.openerTabId === history.first) {
+						if (tab && prevTab && tab.openerTabId === history.first) {
 							_moveNextToTab(tab, prevTab.id);
 						} else {
 							_moveNextToTab(tab, history.first);
@@ -189,10 +194,12 @@ module manager {
 				break;
 
 			case 'atEnd':
+				// Open all tabs at the end
 				_moveToEnd(tab);
 				break;
 
 			case 'otherAtEnd':
+				// Open everything but Speed Dial to the end
 				_moveOtherToEnd(tab);
 				break;
 		}
@@ -334,7 +341,7 @@ module manager {
 	function _onTabCreated(tab: Tab) {
 		_handleCreatedTabMovement(tab);
 
-		if (settings.preventNewWindow && shiftDown && tab.openerTabId !== undefined) {
+		if (tab.openerTabId !== undefined && (settings.preventNewWindow && shiftDown || settings.preventWindowPopups)) {
 			// If tab opened in a new window while holding Shift, move it back.
 			chrome.tabs.get(tab.openerTabId, (opener) => {
 				if (tab.windowId !== opener.windowId) {
@@ -344,7 +351,7 @@ module manager {
 		}
 
 		if (settings.focusOnOpen === 'always' && !tab.active && tab.openerTabId !== undefined) {
-			if (settings.exceptCtrl && ctrlDown) {
+			if ((settings.exceptCtrl && ctrlDown) || (settings.exceptShift && shiftDown)) {
 				return;
 			}
 
