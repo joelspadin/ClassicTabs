@@ -88,7 +88,7 @@
     <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="_locales\en_US\messages.json" />
+    <Content Include="_locales\en\messages.json" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets" />
 </Project>
