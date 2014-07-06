@@ -603,4 +603,3 @@ var HistoryList = (function () {
     };
     return HistoryList;
 })();
-//# sourceMappingURL=background.js.map

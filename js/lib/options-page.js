@@ -663,4 +663,3 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
-//# sourceMappingURL=options-page.js.map

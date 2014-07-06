@@ -157,4 +157,3 @@
 function CreateSettings(defaults, options) {
     return new SettingStorageClass(defaults, options);
 }
-//# sourceMappingURL=storage.js.map

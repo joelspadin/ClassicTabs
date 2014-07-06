@@ -19,4 +19,3 @@ window.addEventListener('keyup', function (e) {
         });
     }
 });
-//# sourceMappingURL=keys.js.map
