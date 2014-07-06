@@ -1,61 +1,68 @@
 {
-	"name": "__MSG_extension_name__",
-	"version": "1.5.2",
-	"manifest_version": 2,
-	"default_locale": "en",
-	
-	"description": "__MSG_extension_desc__",
-	"developer": {
-		"name": "Joel Spadin",
-		"url": "http://chaosinacan.com"
-	},
-	"icons": { 
-		"16": "img/icon-16.png",
-		"48": "img/icon-48.png"
-	},
-	
-	"background": {
-		"scripts": [
-			"js/lib/storage.js",
-			"js/settings.js",
-			"js/background.js"
-		],
-		"persistent": true
-	},
-	"content_scripts": [
-		{
-			"matches": ["<all_urls>"],
-			"js": ["js/include/keys.js"]
-		}
-	],
-	"commands": {
-		"tab_left": {
-			"suggested_key": {
-				"windows": "Ctrl+Shift+PageUp",
-				"mac": "Command+PageUp",
-				"linux": "Ctrl+Shift+PageUp"
-			},
-			"description": "Cycle one tab to the left"
-		},
-		"tab_right": {
-			"suggested_key": {
-				"windows": "Ctrl+Shift+PageDown",
-				"mac": "Command+PageDown",
-				"linux": "Ctrl+Shift+PageDown"
-			},
-			"description": "Cycle one tab to the right"
-		}
-	},
-	"content_security_policy": "default-src 'self'",
-	"incognito": "spanning",
-	"offline_enabled": true,
-	"options_page": "options-page.html",
-	"permissions": [ "tabs" ],
-	"web_accessible_resources": [
-		"js/background.js.map",
-		"js/settings.js.map",
-		"js/include/keys.js.map",
-		"js/lib/options-page.js.map",
-		"js/lib/storage.js.map"
-	]
+    "name": "__MSG_extension_name__",
+    "version": "1.6",
+    "manifest_version": 2,
+    "default_locale": "en",
+    
+    "description": "__MSG_extension_desc__",
+    "developer": {
+        "name": "Joel Spadin",
+        "url": "http://chaosinacan.com"
+    },
+    "icons": { 
+        "16": "img/icon-16.png",
+        "48": "img/icon-48.png"
+    },
+    
+    "background": {
+        "scripts": [
+            "js/lib/storage.js",
+            "js/settings.js",
+            "js/background.js"
+        ],
+        "persistent": true
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/include/keys.js"]
+        }
+    ],
+    "commands": {
+        "tab_left": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+PageUp",
+                "mac": "Command+PageUp"
+            },
+            "description": "Cycle one tab to the left"
+        },
+        "tab_right": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+PageDown",
+                "mac": "Command+PageDown"
+            },
+            "description": "Cycle one tab to the right"
+        }
+    },
+    "content_security_policy": "default-src 'self'",
+    "incognito": "spanning",
+    "offline_enabled": true,
+    "options_page": "options-page.html",
+    "permissions": [ "tabs" ],
+    "web_accessible_resources": [
+        "css/custom.less",
+        "css/options.less",
+        "js/include/keys.js.map",
+        "js/include/keys.ts",
+        "js/lib/options-page.js.map",
+        "js/lib/options-page.ts",
+        "js/lib/storage.js.map",
+        "js/lib/storage.ts",
+        "js/background.js.map",
+        "js/background.ts",
+        "js/options.js.map",
+        "js/options.ts",
+        "js/settings.js.map",
+        "js/settings.ts"
+        ]
 }

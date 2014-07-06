@@ -2,59 +2,40 @@
 /// <reference path="lib/chrome.d.ts" />
 var manager;
 (function (manager) {
-    
-
-    /* Public Fields */
-    manager.history;
-    manager.currentTabId;
-    manager.currentTabIndex;
-    manager.inOrderTabId;
-
-    manager.ctrlDown;
-    manager.shiftDown;
-    manager.ignoreTabActivation;
-
-    /* Private Fields */
     var SHIFT = 16;
     var CTRL = 17;
 
-    var COMMANDS = {
-        "tab_left": {
-            enableSetting: 'enableTabCycle',
-            callback: _cycleTabLeft
-        },
-        "tab_right": {
-            enableSetting: 'enableTabCycle',
-            callback: _cycleTabRight
-        }
-    };
+    var ACTIVE_CHANGED_TIMEOUT = 100;
+    var STARTUP_DELAY = 1000;
 
-    /* Public Functions */
+    manager.windows;
+    manager.ctrlDown;
+    manager.shiftDown;
+    manager.activeChanged;
+
     function init() {
         manager.ctrlDown = false;
         manager.shiftDown = false;
-        manager.ignoreTabActivation = false;
+        manager.activeChanged = false;
 
-        manager.history = {};
-        manager.currentTabId = {};
-        manager.currentTabIndex = {};
-        manager.inOrderTabId = {};
+        manager.windows = {};
 
-        chrome.windows.getAll(_createHistories);
-        chrome.tabs.query({ active: true }, _createCurrentTabs);
-
-        chrome.windows.onCreated.addListener(_onWindowCreated);
-        chrome.windows.onRemoved.addListener(_onWindowRemoved);
-
-        chrome.tabs.onMoved.addListener(_onTabMoved);
-        chrome.tabs.onCreated.addListener(_onTabCreated);
-        chrome.tabs.onRemoved.addListener(_onTabRemoved);
-        chrome.tabs.onActivated.addListener(_onTabActivated);
-        chrome.tabs.onDetached.addListener(_onTabDetached);
-        chrome.tabs.onAttached.addListener(_onTabAttached);
-
-        chrome.commands.onCommand.addListener(_onCommand);
         chrome.runtime.onMessage.addListener(_onMessage);
+
+        // Set up initial state and event handlers after a short delay
+        setTimeout(function () {
+            _createWindowStates(_updateActiveTabs);
+
+            chrome.windows.onCreated.addListener(_onWindowCreated);
+            chrome.windows.onRemoved.addListener(_onWindowRemoved);
+
+            chrome.tabs.onCreated.addListener(_onTabCreated);
+            chrome.tabs.onCreated.addListener(_onTabCreated);
+            chrome.tabs.onRemoved.addListener(_onTabRemoved);
+            chrome.tabs.onActivated.addListener(_onTabActivated);
+            chrome.tabs.onDetached.addListener(_onTabDetached);
+            chrome.tabs.onAttached.addListener(_onTabAttached);
+        }, STARTUP_DELAY);
     }
     manager.init = init;
 
@@ -63,30 +44,353 @@ var manager;
     }
     manager.onInstall = onInstall;
 
-    /* Private Functions */
-    function _addToHistory(tab) {
-        var history = manager.history[tab.windowId];
-        history.insert(tab.id);
+    function _createWindowStates(callback) {
+        chrome.windows.getAll(function (w) {
+            w.forEach(function (window) {
+                if (!(window.id in manager.windows)) {
+                    manager.windows[window.id] = new WindowState();
+                }
+            });
 
-        manager.currentTabId[tab.windowId] = tab.id;
-        manager.currentTabIndex[tab.windowId] = tab.index;
-        manager.inOrderTabId[tab.windowId] = tab.id;
-    }
-
-    function _createCurrentTabs(tabs) {
-        tabs.forEach(function (tab) {
-            manager.currentTabId[tab.windowId] = tab.id;
-            manager.currentTabIndex[tab.windowId] = tab.index;
+            if (callback) {
+                callback();
+            }
         });
     }
 
-    function _createHistories(windows) {
-        windows.forEach(function (window) {
-            manager.history[window.id] = new HistoryList();
+    function _deleteWindowState(windowId) {
+        if (windowId in manager.windows) {
+            delete manager.windows[windowId];
+        }
+    }
+
+    function _getNextTabIndex(neighbor, callback) {
+        var index = {
+            index: -1,
+            windowId: -1
+        };
+
+        if (neighbor === null) {
+            callback(null);
+        } else if (typeof (neighbor) === 'number') {
+            chrome.tabs.get(neighbor, function (tab) {
+                index.index = tab.index + 1;
+                index.windowId = tab.windowId;
+                callback(index);
+            });
+        } else {
+            var tab = neighbor;
+            index.index = tab.index + 1;
+            index.windowId = tab.windowId;
+            callback(index);
+        }
+    }
+
+    function _getWindowState(windowId) {
+        var state = manager.windows[windowId];
+        if (!state) {
+            state = new WindowState();
+            manager.windows[windowId] = state;
+        }
+        return state;
+    }
+
+    function _isSpeedDial(tab) {
+        var a = document.createElement('a');
+        a.href = tab.url;
+        return a.protocol === 'opera:' && a.hostname === 'startpage';
+    }
+
+    function _updateActiveTabs(callback) {
+        chrome.tabs.query({ active: true }, function (tabs) {
+            tabs.forEach(function (tab) {
+                _getWindowState(tab.windowId).add(tab.id);
+            });
+
+            if (callback) {
+                callback();
+            }
         });
     }
 
-    function _cycleTabLeft() {
+    /* Tab movement functions */
+    function _handleNewTab(tab) {
+        switch (settings.onOpen) {
+            case 'nextToActive':
+                // Open all tabs next to the active tab
+                _moveNextToActive(tab);
+                break;
+
+            case 'atEnd':
+                // Move all tabs to the end
+                _moveToEnd(tab);
+                break;
+
+            case 'otherAtEnd':
+                // Open everything but Speed Dial to the end
+                if (_isSpeedDial(tab)) {
+                    _moveNextToActive(tab);
+                } else {
+                    _moveToEnd(tab);
+                }
+                break;
+        }
+    }
+
+    function _handleNewWindowTab(tab) {
+        if (tab.openerTabId !== undefined) {
+            // If preventing all new windows or tab created while holding
+            // shift, check if it opened in a new window and move it back.
+            if (settings.preventWindowPopups || (settings.preventNewWindow && manager.shiftDown)) {
+                chrome.tabs.get(tab.openerTabId, function (opener) {
+                    if (tab.windowId != opener.windowId) {
+                        _moveToOpenerWindow(tab, opener);
+                    }
+                });
+            }
+        }
+    }
+
+    function _moveNextToActive(tab, windowId, callback) {
+        if (typeof windowId === 'undefined') {
+            windowId = tab.windowId;
+        }
+
+        var state = _getWindowState(windowId);
+        var neighbor = state.history.first;
+
+        if (settings.openInOrder && state.inOrderTab !== null) {
+            // If we are opening tabs in order, place the new tab
+            // next to the last tab we opened instead of next to
+            // its opener.
+            chrome.tabs.get(state.inOrderTab, function (prevTab) {
+                if (tab && prevTab && tab.openerTabId === state.history.first) {
+                    neighbor = prevTab.id;
+                }
+                _moveNextToTab(tab, neighbor, callback);
+                state.inOrderTab = tab.id;
+            });
+        } else {
+            _moveNextToTab(tab, neighbor, callback);
+        }
+    }
+
+    function _moveNextToTab(tab, neighbor, callback) {
+        if (neighbor === null) {
+            return;
+        }
+
+        _getNextTabIndex(neighbor, function (index) {
+            if (tab.index !== index.index || tab.windowId !== index.windowId) {
+                chrome.tabs.move(tab.id, index, callback);
+            }
+        });
+    }
+
+    function _moveToEnd(tab, windowId, callback) {
+        if (typeof (windowId) === 'undefined') {
+            windowId = tab.windowId;
+        }
+        chrome.tabs.move(tab.id, { index: -1, windowId: windowId }, callback);
+    }
+
+    function _moveToOpenerWindow(tab, opener) {
+        function _focus(tab) {
+            chrome.tabs.update(tab.id, { active: true });
+        }
+
+        switch (settings.onOpen) {
+            case 'nextToActive':
+                _moveNextToActive(tab, opener.windowId, _focus);
+                break;
+
+            case 'atEnd':
+                _moveToEnd(tab, opener.windowId, _focus);
+                break;
+
+            case 'otherAtEnd':
+                if (_isSpeedDial(tab)) {
+                    _moveNextToActive(tab, opener.windowId, _focus);
+                } else {
+                    _moveToEnd(tab, opener.windowId, _focus);
+                }
+                break;
+
+            case 'default':
+                if (_isSpeedDial(tab)) {
+                    _moveToEnd(tab, opener.windowId, _focus);
+                } else {
+                    _moveNextToActive(tab, opener.windowId, _focus);
+                }
+                break;
+        }
+    }
+
+    /* Event handlers */
+    function _onMessage(message, sender, sendResponse) {
+        switch (message.action) {
+            case 'up':
+                if (message.key === CTRL) {
+                    manager.ctrlDown = false;
+                } else if (message.key === SHIFT) {
+                    manager.shiftDown = false;
+                }
+                break;
+
+            case 'down':
+                if (message.key === CTRL) {
+                    manager.ctrlDown = true;
+                } else if (message.key === SHIFT) {
+                    manager.shiftDown = true;
+                }
+                break;
+        }
+    }
+
+    function _onTabActivated(activeInfo) {
+        var state = _getWindowState(activeInfo.windowId);
+        state.add(activeInfo.tabId);
+        state.inOrderTab = activeInfo.tabId;
+
+        // Set a variable to make it easier to tell if a tab removed message
+        // directly follows a tab activated message.
+        manager.activeChanged = true;
+        setTimeout(function () {
+            manager.activeChanged = false;
+        }, ACTIVE_CHANGED_TIMEOUT);
+
+        log('activate tab ' + activeInfo.tabId, state.history.toString());
+    }
+
+    function _onTabAttached(tabId, attachInfo) {
+        var state = _getWindowState(attachInfo.newWindowId);
+        state.add(tabId);
+        log('attach tab ' + tabId, state.history.toString());
+    }
+
+    function _onTabCreated(tab) {
+        log('create tab ' + tab.id);
+
+        _handleNewTab(tab);
+        _handleNewWindowTab(tab);
+
+        // If we want to focus all opened tabs...
+        if (settings.focusOnOpen === 'always') {
+            // and the tab isn't focused and was opened by another tab...
+            if (!tab.active && tab.openerTabId !== undefined) {
+                // and we aren't holding one of the exception keys
+                if ((settings.exceptCtrl && manager.ctrlDown) || (settings.exceptShift && manager.shiftDown)) {
+                    return;
+                }
+
+                // focus the tab
+                chrome.tabs.update(tab.id, { active: true });
+            }
+        }
+    }
+
+    function _onTabDetached(tabId, detachInfo) {
+        var state = _getWindowState(detachInfo.oldWindowId);
+        state.remove(tabId);
+
+        log('detach tab ' + tabId, state.history.toString());
+    }
+
+    function _onTabRemoved(tabId, removeInfo) {
+        var state = _getWindowState(removeInfo.windowId);
+        var mode = settings.onClose;
+
+        // Since we don't have a good way of determining whether the removed tab
+        // was previously the active tab, make an educated guess based on the fact
+        // that Opera will focus some other tab before we get this message, so the
+        // removed tab will be the second most-recent tab in the window's history.
+        var wasActive = manager.activeChanged && state.history.second === tabId;
+
+        // If we are overriding which tab gets focused after removing a tab, and
+        // the removed tab was active, rewind the state by one because Opera will
+        // focus some other tab before telling us a tab was removed.
+        if (mode !== 'default' && wasActive) {
+            state.rewind();
+            log('rewind', state.history.toString());
+        }
+
+        state.remove(tabId);
+        log('remove tab ' + tabId, state.history.toString());
+
+        // If the removed tab was active, change the tab that gets focus.
+        if (wasActive) {
+            switch (mode) {
+                case 'lastfocused':
+                    var newTab = state.history.first;
+                    if (newTab !== null) {
+                        log('focus ' + newTab);
+                        chrome.tabs.update(newTab, { active: true });
+                    }
+                    break;
+
+                case 'next':
+                case 'previous':
+                    var index = state.currentTabIndex;
+
+                    if (index !== null) {
+                        // If mode is 'previous', focus the tab in the closing tab's old position.
+                        // If mode is 'next', focus the tab right after that.
+                        if (mode === 'next') {
+                            index += 1;
+                        }
+
+                        var query = {
+                            windowId: removeInfo.windowId,
+                            index: index
+                        };
+
+                        chrome.tabs.query(query, function (tabs) {
+                            if (tabs.length > 0) {
+                                chrome.tabs.update(tabs[0].id, { active: true });
+                            }
+                        });
+                    }
+                    break;
+            }
+        }
+        // TODO: apply tab removal logic here and add newly focused tab to history.
+    }
+
+    function _onWindowCreated(window) {
+        var state = _getWindowState(window.id);
+
+        // Update the history with the active tab, if any are active yet
+        if (window.tabs) {
+            window.tabs.filter(function (tab) {
+                return tab.active;
+            }).forEach(function (tab) {
+                state.add(tab.id);
+                state.inOrderTab = tab.id;
+            });
+        }
+
+        log('window created ' + window.id, state.history.toString());
+    }
+
+    function _onWindowRemoved(windowId) {
+        _deleteWindowState(windowId);
+        log('window deleted ' + windowId);
+    }
+})(manager || (manager = {}));
+
+var commands;
+(function (commands) {
+    var COMMANDS = {
+        "tab_left": cycleTabLeft,
+        "tab_right": cycleTabRight
+    };
+
+    function init() {
+        chrome.commands.onCommand.addListener(_onCommand);
+    }
+    commands.init = init;
+
+    function cycleTabLeft() {
         chrome.tabs.query({ currentWindow: true, active: true }, function (results) {
             if (results.length == 0) {
                 return;
@@ -120,8 +424,9 @@ var manager;
             });
         });
     }
+    commands.cycleTabLeft = cycleTabLeft;
 
-    function _cycleTabRight() {
+    function cycleTabRight() {
         chrome.tabs.query({ currentWindow: true, active: true }, function (results) {
             if (results.length == 0) {
                 return;
@@ -154,306 +459,110 @@ var manager;
         });
     }
 
-    function _getNextTabIndex(neighborId, callback) {
-        if (neighborId === null) {
-            callback(null, null);
-        }
-
-        chrome.tabs.get(neighborId, function (neighbor) {
-            callback(neighbor.index + 1, neighbor.windowId);
-        });
-    }
-
-    function _handleCreatedTabMovement(tab) {
-        var history = manager.history[tab.windowId];
-        switch (settings.onOpen) {
-            case 'nextToActive':
-                // Open all tabs next to the active tab
-                if (settings.openInOrder && manager.inOrderTabId[tab.windowId] != null) {
-                    chrome.tabs.get(manager.inOrderTabId[tab.windowId], function (prevTab) {
-                        if (tab && prevTab && tab.openerTabId === history.first) {
-                            _moveNextToTab(tab, prevTab.id);
-                        } else {
-                            _moveNextToTab(tab, history.first);
-                        }
-                        manager.inOrderTabId[tab.windowId] = tab.id;
-                    });
-                } else {
-                    _moveNextToTab(tab, history.first);
-                }
-                break;
-
-            case 'atEnd':
-                // Open all tabs at the end
-                _moveToEnd(tab);
-                break;
-
-            case 'otherAtEnd':
-                // Open everything but Speed Dial to the end
-                _moveOtherToEnd(tab);
-                break;
-        }
-
-        if (tab.active) {
-            history.insert(tab.id);
-        } else {
-            history.append(tab.id);
-        }
-    }
-
-    function _isSpeeddial(tab) {
-        return tab.url === 'opera://startpage/';
-    }
-
-    function _moveNextToTab(tab, neighborId, callback) {
-        if (neighborId === null) {
-            return;
-        }
-
-        if (typeof (neighborId) === 'number') {
-            _getNextTabIndex(neighborId, function (index, windowId) {
-                if (tab.index !== index || tab.windowId !== windowId) {
-                    chrome.tabs.move(tab.id, { index: index, windowId: windowId }, callback);
-                }
-            });
-        } else {
-            var neighbor = neighborId;
-            if (tab.index !== neighbor.index + 1 || tab.windowId !== neighbor.windowId) {
-                chrome.tabs.move(tab.id, { index: neighbor.index + 1, windowId: neighbor.windowId }, callback);
-            }
-        }
-    }
-
-    function _moveOtherToEnd(tab, windowId, callback) {
-        if (typeof (windowId) === 'undefined') {
-            windowId = tab.windowId;
-        }
-
-        var history = manager.history[windowId];
-        if (_isSpeeddial(tab)) {
-            _moveNextToTab(tab, history.first, callback);
-        } else {
-            _moveToEnd(tab, windowId, callback);
-        }
-    }
-
-    function _moveToEnd(tab, windowId, callback) {
-        if (typeof (windowId) === 'undefined') {
-            windowId = tab.windowId;
-        }
-        chrome.tabs.move(tab.id, { index: -1, windowId: windowId }, callback);
-    }
-
-    function _moveToOpenerWindow(tab, opener) {
-        var history = manager.history[opener.windowId];
-        var index = -1;
-
-        function _focus(tab) {
-            chrome.tabs.update(tab.id, { active: true });
-        }
-
-        switch (settings.onOpen) {
-            case 'nextToActive':
-                _moveNextToTab(tab, history.first, _focus);
-                break;
-
-            case 'atEnd':
-                _moveToEnd(tab, opener.windowId, _focus);
-                break;
-
-            case 'otherAtEnd':
-                _moveOtherToEnd(tab, opener.windowId, _focus);
-                break;
-
-            case 'default':
-                if (_isSpeeddial(tab)) {
-                    _moveToEnd(tab, opener.windowId, _focus);
-                } else {
-                    _moveNextToTab(tab, opener, _focus);
-                }
-                break;
-        }
-    }
-
     function _onCommand(command) {
-        var def = COMMANDS[command];
-        if (def) {
-            console.log(command, def);
-            if (!('enableSetting' in def) || settings.get(def.enableSetting)) {
-                def.callback.call(null);
-            }
+        var callback = COMMANDS[command];
+        if (callback) {
+            callback.call(null);
         } else {
             console.error('Unknown keyboard command: ' + command);
         }
     }
+})(commands || (commands = {}));
 
-    function _onMessage(message, sender, sendResponse) {
-        switch (message.action) {
-            case 'up':
-                if (message.key === CTRL) {
-                    manager.ctrlDown = false;
-                } else if (message.key === SHIFT) {
-                    manager.shiftDown = false;
-                }
-                break;
-
-            case 'down':
-                if (message.key === CTRL) {
-                    manager.ctrlDown = true;
-                } else if (message.key === SHIFT) {
-                    manager.shiftDown = true;
-                }
-                break;
-        }
+function log() {
+    var args = [];
+    for (var _i = 0; _i < (arguments.length - 0); _i++) {
+        args[_i] = arguments[_i + 0];
     }
-
-    function _onTabActivated(activeInfo) {
-        // Delay changing history since a new tab gets activated first
-        // when a tab is being removed, then the tabRemoved event fires.
-        chrome.tabs.get(activeInfo.tabId, function (tab) {
-            // Ignore whichever tab gets activated right after a tab is closed
-            // if we are overriding tab close behavior.
-            if (manager.ignoreTabActivation) {
-                manager.ignoreTabActivation = false;
-            } else {
-                _addToHistory(tab);
-            }
-        });
+    if (log.enabled) {
+        console.log.apply(null, args);
     }
+}
 
-    function _onTabAttached(tabId, attachInfo) {
-        var history = manager.history[attachInfo.newWindowId];
-        history.insert(tabId);
-    }
-
-    function _onTabCreated(tab) {
-        _handleCreatedTabMovement(tab);
-
-        if (tab.openerTabId !== undefined && (settings.preventNewWindow && manager.shiftDown || settings.preventWindowPopups)) {
-            // If tab opened in a new window while holding Shift, move it back.
-            chrome.tabs.get(tab.openerTabId, function (opener) {
-                if (tab.windowId !== opener.windowId) {
-                    _moveToOpenerWindow(tab, opener);
-                }
-            });
-        }
-
-        if (settings.focusOnOpen === 'always' && !tab.active && tab.openerTabId !== undefined) {
-            if ((settings.exceptCtrl && manager.ctrlDown) || (settings.exceptShift && manager.shiftDown)) {
-                return;
-            }
-
-            chrome.tabs.update(tab.id, { active: true });
-        }
-    }
-
-    function _onTabDetached(tabId, detachInfo) {
-        var history = manager.history[detachInfo.oldWindowId];
-        history.remove(tabId);
-    }
-
-    function _onTabMoved(tabId, moveInfo) {
-        // If the moved tab was active, update the currentTabIndex
-        if (manager.currentTabId[moveInfo.windowId] === tabId) {
-            manager.currentTabIndex[moveInfo.windowId] = moveInfo.toIndex;
-        }
-    }
-
-    function _onTabRemoved(id, removeInfo) {
-        var history = manager.history[removeInfo.windowId];
-        var mode = settings.onClose;
-        var wasActive = manager.currentTabId[removeInfo.windowId] === id || manager.currentTabId[removeInfo.windowId] === undefined;
-
-        switch (mode) {
-            case 'lastfocused':
-                var newTab = history.second;
-                if (wasActive && newTab) {
-                    chrome.tabs.update(newTab, { active: true }, function (tab) {
-                        // Just in case, force this new tab to the top of the history
-                        if (tab) {
-                            _addToHistory(tab);
-                        }
-                    });
-                }
-
-                manager.ignoreTabActivation = true;
-                break;
-
-            case 'next':
-            case 'previous':
-                var index = manager.currentTabIndex[removeInfo.windowId];
-
-                if (wasActive && index !== undefined) {
-                    // if next tab, focus tab in the closing tab's old position.
-                    // if previous tab, focus the tab right before it.
-                    if (mode === 'previous') {
-                        index = Math.max(0, index - 1);
-                    }
-
-                    chrome.tabs.query({
-                        windowId: removeInfo.windowId,
-                        index: index
-                    }, function (tabs) {
-                        if (tabs.length > 0) {
-                            chrome.tabs.update(tabs[0].id, { active: true }, function (tab) {
-                                // Just in case, force this new tab to the top of the history
-                                if (tab) {
-                                    _addToHistory(tab);
-                                }
-                            });
-                        }
-                    });
-                }
-                manager.ignoreTabActivation = true;
-                break;
-        }
-
-        history.remove(id);
-    }
-
-    function _onWindowCreated(window) {
-        manager.history[window.id] = new HistoryList();
-
-        if (!(window.id in manager.currentTabId)) {
-            manager.currentTabId[window.id] = null;
-        }
-        if (!(window.id in manager.currentTabIndex)) {
-            manager.currentTabIndex[window.id] = null;
-        }
-        if (!(window.id in manager.inOrderTabId)) {
-            manager.inOrderTabId[window.id] = null;
-        }
-    }
-
-    function _onWindowRemoved(windowId) {
-        delete manager.history[windowId];
-        delete manager.currentTabId[windowId];
-        delete manager.currentTabIndex[windowId];
-        delete manager.inOrderTabId[windowId];
-    }
-})(manager || (manager = {}));
+var log;
+(function (log) {
+    log.enabled = false;
+})(log || (log = {}));
 
 /* Initialization */
 chrome.runtime.onInstalled.addListener(manager.onInstall);
 manager.init();
+commands.init();
 
+;
+;
 
-/** Structure used to save how recently a tab was focused */
+var WindowState = (function () {
+    function WindowState() {
+        this.history = new HistoryList();
+        this._currentInOrderTab = null;
+        this._lastInOrderTab = null;
+        this._currentTabIndex = null;
+        this._lastTabIndex = null;
+
+        this.inOrderTab = null;
+    }
+    Object.defineProperty(WindowState.prototype, "currentTabIndex", {
+        get: function () {
+            return this._currentTabIndex;
+        },
+        set: function (newTab) {
+            this._lastTabIndex = this._currentTabIndex;
+            this._currentTabIndex = newTab;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    Object.defineProperty(WindowState.prototype, "inOrderTab", {
+        get: function () {
+            return this._currentInOrderTab;
+        },
+        set: function (newTab) {
+            this._lastInOrderTab = this._currentInOrderTab;
+            this._currentInOrderTab = newTab;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    WindowState.prototype.add = function (id) {
+        var _this = this;
+        this.history.add(id);
+        this.inOrderTab = id;
+
+        chrome.tabs.get(id, function (tab) {
+            // make sure the current tab hasn't changed
+            // since we started this call.
+            if (_this.history.first === id) {
+                _this.currentTabIndex = tab.index;
+            }
+        });
+    };
+
+    WindowState.prototype.remove = function (id) {
+        this.history.remove(id);
+        if (this.inOrderTab === id) {
+            this.inOrderTab = this.history.first;
+        }
+    };
+
+    WindowState.prototype.rewind = function () {
+        this.history.rewind();
+        this._currentInOrderTab = this._lastInOrderTab;
+        this._currentTabIndex = this._lastTabIndex;
+    };
+    return WindowState;
+})();
+
 var HistoryList = (function () {
-    /* Public Functions */
     function HistoryList() {
-        this._head = new HistoryList.Node(null);
-        this._tail = new HistoryList.Node(null);
-        this._head.next = this._tail;
-        this._tail.prev = this._head;
-
-        this._map = {};
+        this.items = [];
+        this._lastItems = [];
     }
     Object.defineProperty(HistoryList.prototype, "first", {
-        /** Returns the most recently active tab */
         get: function () {
-            var item = this._head.next;
-            return (item === this._tail) ? null : item.id;
+            return this.items.length > 0 ? this.items[0] : null;
         },
         enumerable: true,
         configurable: true
@@ -461,118 +570,37 @@ var HistoryList = (function () {
 
     Object.defineProperty(HistoryList.prototype, "second", {
         get: function () {
-            return this.item(1);
+            return this.items.length > 1 ? this.items[1] : null;
         },
         enumerable: true,
         configurable: true
     });
 
-    HistoryList.prototype.item = function (index) {
-        var item = this._head.next;
-        for (var i = 0; i < index && item !== this._tail; i++) {
-            item = item.next;
-        }
-
-        return (item === this._tail) ? null : item.id;
+    HistoryList.prototype.add = function (id) {
+        this._copyState();
+        this.remove(id);
+        this.items.unshift(id);
     };
 
-    /**
-    * Adds a tab at the front of the list. If the tab already
-    * exists, it will be moved to the front.
-    */
-    HistoryList.prototype.insert = function (id) {
-        var item = this._detachOrCreateNode(id);
-        var second = this._head.next;
-
-        item.prev = this._head;
-        this._head.next = item;
-
-        item.next = second;
-        second.prev = item;
-    };
-
-    /**
-    * Adds a tab at the end of the list. If the tab already
-    * exists, it will be moved to the front.
-    */
-    HistoryList.prototype.append = function (id) {
-        var item = this._detachOrCreateNode(id);
-        var second = this._tail.prev;
-
-        item.next = this._tail;
-        this._tail.prev = item;
-
-        item.prev = second;
-        second.next = item;
-    };
-
-    /** Removes a tab from the list */
     HistoryList.prototype.remove = function (id) {
-        var toRemove = this._findNode(id);
-
-        if (toRemove) {
-            this._detachNode(toRemove);
-            delete this._map[id];
+        var existing = this.items.indexOf(id);
+        if (existing >= 0) {
+            this.items.splice(existing, 1);
         }
     };
 
-    /** Converts the current history list to an array of tab ids */
-    HistoryList.prototype.toArray = function () {
-        var list = [];
-        var item = this._head.next;
-        while (item !== this._tail) {
-            list.push(item.id);
-            item = item.next;
-        }
-
-        return list;
+    HistoryList.prototype.rewind = function () {
+        this.items = this._lastItems;
+        this._copyState();
     };
 
-    /* Private Functions */
-    /**
-    * Gets a node for the tab ID by either detaching an existing
-    * one or creating a new one.
-    */
-    HistoryList.prototype._detachOrCreateNode = function (id) {
-        var item = this._findNode(id);
-        if (item) {
-            this._detachNode(item);
-        } else {
-            item = new HistoryList.Node(id);
-            this._map[id] = item;
-        }
-        return item;
+    HistoryList.prototype.toString = function () {
+        return this.items.join(', ');
     };
 
-    /** Returns the node for a tab with a given ID */
-    HistoryList.prototype._findNode = function (id) {
-        return this._map[id];
-    };
-
-    /** Detaches a node */
-    HistoryList.prototype._detachNode = function (node) {
-        var before = node.prev;
-        var after = node.next;
-
-        before.next = after;
-        after.prev = before;
-
-        node.prev = null;
-        node.next = null;
+    HistoryList.prototype._copyState = function () {
+        this._lastItems = this.items.slice();
     };
     return HistoryList;
 })();
-
-var HistoryList;
-(function (HistoryList) {
-    var Node = (function () {
-        function Node(id) {
-            this.prev = null;
-            this.next = null;
-            this.id = id;
-        }
-        return Node;
-    })();
-    HistoryList.Node = Node;
-})(HistoryList || (HistoryList = {}));
 //# sourceMappingURL=background.js.map
