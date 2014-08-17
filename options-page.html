@@ -64,7 +64,7 @@
 				<label><input type="checkbox" name="preventNewWindow"> <code>Shift+click</code> opens tabs in the same window</label>
 			</p>
 			<p>
-				<label><input type="checkbox" name="preventWindowPopups"> Prevent pop-ups from opening new windows</label>
+				<label><input type="checkbox" name="preventWindowPopups"> Prevent all tabs from opening new windows</label>
 			</p>
 			<p>
 				Note: features that rely on <code>Shift</code> and <code>Ctrl</code> will not work properly on internal pages such as
@@ -89,17 +89,20 @@
 				between tabs opened with <code>Ctrl+T</code>, a mouse gesture, or the New Tab button.
 			</p>
 
+			<h4>When I restore a closed tab, why doesn't it go back to its original location?</h4>
+			<p>
+				See above. Restored tabs are technically new tabs.
+			</p>
+
 			<h4>Can you make <code>&lt;keyboard shortcut&gt;</code> do <code>&lt;cool feature&gt;</code>?</h4>
 			<p>
 				Maybe. Opera has implemented the chrome.commands API, but some functions (such as reopening closed tabs)
-				aren't available to extensions and extensions can't assign commands to shortcuts like <code>Ctrl+Z</code>
-				which already have default actions.
+				aren't available to extensions.
 			</p>
 
 			<h4>Can you make Ctrl+Tab cycle through tabs in last-visited order?</h4>
 			<p>
-				No, but Opera can. First, <a href="http://my.opera.com/desktopteam/blog/">get Opera 16 or later</a>.
-				Then, go enter <code>opera:flags</code> in the address bar and look for the
+				No, but Opera can. Enter <code>opera:flags</code> in the address bar and look for the
 				<code>Tab cycling in activation order</code> option.
 			</p>
 

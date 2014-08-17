@@ -30,7 +30,7 @@ module manager {
 			chrome.windows.onRemoved.addListener(_onWindowRemoved);
 
 			chrome.tabs.onCreated.addListener(_onTabCreated);
-			chrome.tabs.onCreated.addListener(_onTabCreated);
+			chrome.tabs.onMoved.addListener(_onTabMoved);
 			chrome.tabs.onRemoved.addListener(_onTabRemoved);
 			chrome.tabs.onActivated.addListener(_onTabActivated);
 			chrome.tabs.onDetached.addListener(_onTabDetached);
@@ -263,17 +263,17 @@ module manager {
 			manager.activeChanged = false;
 		}, ACTIVE_CHANGED_TIMEOUT);
 
-		log('activate tab ' + activeInfo.tabId, state.history.toString());
+		//log('activate tab ' + activeInfo.tabId, state.history.toString());
 	}
 
 	function _onTabAttached(tabId: number, attachInfo: chrome.tabs.TabAttachInfo) {
 		var state = _getWindowState(attachInfo.newWindowId);
 		state.add(tabId);
-		log('attach tab ' + tabId, state.history.toString());
+		//log('attach tab ' + tabId, state.history.toString());
 	}
 
 	function _onTabCreated(tab: Tab) {
-		log('create tab ' + tab.id);
+		//log('create tab ' + tab.id);
 
 		_handleNewTab(tab);
 		_handleNewWindowTab(tab);
@@ -296,7 +296,16 @@ module manager {
 		var state = _getWindowState(detachInfo.oldWindowId);
 		state.remove(tabId);
 
-		log('detach tab ' + tabId, state.history.toString());
+		//log('detach tab ' + tabId, state.history.toString());
+	}
+
+	function _onTabMoved(tabId: number, moveInfo: chrome.tabs.TabMoveInfo) {
+		var state = _getWindowState(moveInfo.windowId);
+
+		if (state.currentTabIndex === moveInfo.fromIndex) {
+			state.currentTabIndex = moveInfo.toIndex;
+			//log('active tab moved from', moveInfo.fromIndex, 'to', moveInfo.toIndex);
+		}
 	}
 
 	function _onTabRemoved(tabId: number, removeInfo: chrome.tabs.TabRemoveInfo) {
@@ -314,11 +323,11 @@ module manager {
 		// focus some other tab before telling us a tab was removed.
 		if (mode !== 'default' && wasActive) {
 			state.rewind();
-			log('rewind', state.history.toString());
+			//log('rewind', state.history.toString());
 		}
 
 		state.remove(tabId);
-		log('remove tab ' + tabId, state.history.toString());
+		//log('remove tab ' + tabId, state.history.toString());
 
 		// If the removed tab was active, change the tab that gets focus.
 		if (wasActive) {
@@ -326,7 +335,6 @@ module manager {
 				case 'lastfocused':
 					var newTab = state.history.first;
 					if (newTab !== null) {
-						log('focus ' + newTab);
 						chrome.tabs.update(newTab, { active: true });
 					}
 					break;
@@ -336,10 +344,10 @@ module manager {
 					var index = state.currentTabIndex;
 
 					if (index !== null) {
-						// If mode is 'previous', focus the tab in the closing tab's old position.
-						// If mode is 'next', focus the tab right after that.
-						if (mode === 'next') {
-							index += 1;
+						// If mode is 'next', focus the tab in the closing tab's old position.
+						// If mode is 'previous', focus the tab right before that, or leftmost tab
+						if (mode === 'previous') {
+							index = Math.max(0, index - 1);
 						}
 
 						var query = {
@@ -350,14 +358,16 @@ module manager {
 						chrome.tabs.query(query, tabs => {
 							if (tabs.length > 0) {
 								chrome.tabs.update(tabs[0].id, { active: true });
+							} else {
+								//log("Couldn't find a tab at index", index, '(rightmost tab closed?');
 							}
 						});
+					} else {
+						console.error("Don't know the index of the removed tab!");
 					}
 					break;
 			}
 		}
-
-		// TODO: apply tab removal logic here and add newly focused tab to history.
 	}
 
 	function _onWindowCreated(window: BrowserWindow) {
@@ -372,12 +382,12 @@ module manager {
 				});
 		}
 
-		log('window created ' + window.id, state.history.toString());
+		//log('window created ' + window.id, state.history.toString());
 	}
 
 	function _onWindowRemoved(windowId: number) {
 		_deleteWindowState(windowId);
-		log('window deleted ' + windowId);
+		//log('window deleted ' + windowId);
 	}
 }
 
@@ -473,7 +483,7 @@ module commands {
 
 function log(...args: any[]) {
 	if (log.enabled) {
-		console.log.apply(null, args);
+		console.log.apply(console, args);
 	}
 }
 
@@ -497,6 +507,7 @@ class WindowState {
 	private _lastInOrderTab: number;
 	private _currentTabIndex: number;
 	private _lastTabIndex: number;
+	private _updatingIndex: boolean;
 
 	public history: HistoryList;
 
@@ -522,6 +533,7 @@ class WindowState {
 		this._lastInOrderTab = null;
 		this._currentTabIndex = null;
 		this._lastTabIndex = null;
+		this._updatingIndex = false;
 
 		this.inOrderTab = null;
 	}
@@ -529,13 +541,17 @@ class WindowState {
 	public add(id: number) {
 		this.history.add(id);
 		this.inOrderTab = id;
+		this._updatingIndex = true;
 
 		chrome.tabs.get(id, tab => {
 			// make sure the current tab hasn't changed
 			// since we started this call.
 			if (this.history.first === id) {
 				this.currentTabIndex = tab.index;
+				//log('current tab', this.currentTabIndex);
 			}
+
+			this._updatingIndex = false;
 		});
 	}
 
@@ -549,7 +565,14 @@ class WindowState {
 	public rewind() {
 		this.history.rewind();
 		this._currentInOrderTab = this._lastInOrderTab;
-		this._currentTabIndex = this._lastTabIndex;
+
+		// If we get told to rewind while we're still querying the active tab's index,
+		// don't rewind the index. We already have the value we should be rewinding to.
+		if (!this._updatingIndex) {
+			this._currentTabIndex = this._lastTabIndex;
+		}
+
+		//log('rewound history. current tab', this._currentTabIndex, ', in order tab', this._currentInOrderTab);
 	}
 }
 
