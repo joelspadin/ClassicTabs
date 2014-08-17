@@ -7,4 +7,13 @@
 *.user
 
 ; Generated files
+__pycache__
+*.crx
 *.map
+*.min.css
+*.min.html
+*.nex
+*.pyc
+
+/build/
+README.html
