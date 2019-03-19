@@ -1,0 +1,38 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "browser",
+            "type": "pickString",
+            "description": "Browser for which to build",
+            "options": ["opera", "chrome", "firefox", "edge"],
+            "default": "opera"
+        }
+    ],
+    "tasks": [
+        {
+            "label": "build",
+            "group": "build",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "build", "${input:browser}"],
+            "problemMatcher": [
+                "$ts-webpack",
+                "$tslint-webpack",
+            ]
+        },
+        {
+            "label": "watch",
+            "group": "build",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "dev", "${input:browser}"],
+            "problemMatcher": [
+                "$ts-webpack-watch",
+                "$tslint-webpack-watch",
+            ]
+        }
+    ]
+}
