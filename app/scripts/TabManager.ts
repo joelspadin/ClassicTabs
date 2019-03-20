@@ -3,8 +3,6 @@ import { storage, StorageItems } from './storage';
 import { WindowState } from './WindowState';
 import * as keys from './keys';
 
-const ACTIVE_CHANGED_TIMEOUT = 100;
-
 let settings: StorageItems;
 let windowStates: Record<number, WindowState> = {};
 let activeChanged = false;
@@ -210,7 +208,7 @@ async function onTabActivated(info: Tabs.OnActivatedActiveInfoType) {
     // Set a variable to make it easier to tell if a tab removed message
     // directly follows a tab activated message.
     activeChanged = true;
-    await wait(ACTIVE_CHANGED_TIMEOUT);
+    await wait(settings.activeChangedTimeout);
     activeChanged = false;
 }
 

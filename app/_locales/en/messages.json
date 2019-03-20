@@ -16,6 +16,10 @@
         "message": "Classic Tabs Settings",
         "description": "Title for the options page"
     },
+    "default": {
+        "message": "Default",
+        "description": "Resets a setting to its default value"
+    },
 
     "whenOpeningTab": {
         "message": "When opening a tab",
@@ -102,5 +106,26 @@
     "preventNewWindows": {
         "message": "Prevent all tabs from opening new windows",
         "description": "Forces all new tabs to open in the same window"
+    },
+
+    "advancedSettings": {
+        "message": "Advanced settings",
+        "description": "Header for the section with advanced settings"
+    },
+    "startupDelay": {
+        "message": "Startup delay",
+        "description": "Adjusts how long the extension waits after the browser starts up before it starts controlling tabs"
+    },
+    "startupDelayNote": {
+        "message": "Try increasing this if tabs get moved around when you start Opera.",
+        "description": "Describes when the 'Startup delay' setting should be changed"
+    },
+    "tabCloseWaitTime": {
+        "message": "Tab close wait time",
+        "description": "Adjusts how long the extension waits when figuring out if Opera switched tab focus when closing a tab"
+    },
+    "tabCloseWaitTimeNote": {
+        "message": "Try increasing this if the wrong tab gets focused after closing a tab.",
+        "description": "Describes when the 'Tab close wait time' setting should be changed"
     }
 }

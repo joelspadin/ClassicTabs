@@ -21,6 +21,11 @@ export interface StorageItems {
     preventNewWindow: boolean;
     /** If true, prevent all tabs from opening in a new window. */
     preventWindowPopups: boolean;
+
+    /** Delay in milliseconds to prevent re-ordering tabs on startup. */
+    startupDelay: number;
+    /** Time to wait in milliseconds when checking if a tab was closed immediately after a focus change. */
+    activeChangedTimeout: number;
 }
 
 export const storage = StorageArea.create<StorageItems>({
@@ -33,5 +38,8 @@ export const storage = StorageArea.create<StorageItems>({
         openInOrder: true,
         preventNewWindow: false,
         preventWindowPopups: false,
+
+        startupDelay: 2000,
+        activeChangedTimeout: 100,
     }
 });

@@ -15,6 +15,8 @@ import {
     useStore,
     applyStyle,
     useMessage,
+    Number,
+    ResetButton,
 } from '@spadin/webextension-options';
 
 applyStyle();
@@ -116,6 +118,29 @@ const OptionsApp: React.FunctionComponent = () => {
                 </SettingsRow>
             </SettingsSection>
 
+            <SettingsSection title={useMessage('advancedSettings')}>
+                <SettingsRow>
+                    <Number label={useMessage('startupDelay')}
+                        description={useMessage('startupDelayNote')}
+                        accessor={storage.startupDelay}
+                        min={1000}
+                        max={10000}
+                        step={500}
+                        />
+                    <ResetButton label={useMessage('default')} accessor={storage.startupDelay} />
+                </SettingsRow>
+                <SettingsRow>
+                    <Number label={useMessage('tabCloseWaitTime')}
+                        description={useMessage('tabCloseWaitTimeNote')}
+                        accessor={storage.activeChangedTimeout}
+                        min={50}
+                        max={500}
+                        step={10}
+                        />
+                    <ResetButton label={useMessage('default')} accessor={storage.activeChangedTimeout} />
+                </SettingsRow>
+            </SettingsSection>
+
             <SettingsSection title="Frequently Asked Questions">
                 <InfoRow>
                     <h4>Something is broken!</h4>
@@ -142,7 +167,7 @@ const OptionsApp: React.FunctionComponent = () => {
                 <InfoRow>
                     <h4>When I restore a closed tab, why doesn't it go back to its original location?</h4>
                     <p>
-                        See above. Restored tabs are just new tabs.
+                        See above. Restored tabs are also just new tabs.
                     </p>
                 </InfoRow>
 
