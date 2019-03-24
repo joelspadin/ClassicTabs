@@ -1,6 +1,7 @@
 import { browser } from 'webextension-polyfill-ts';
 import { storage } from './storage';
-import { init } from './TabManager';
+import * as TabManager from './TabManager';
+import * as logger from './logger';
 
 browser.runtime.onInstalled.addListener(async details => {
     console.info(`Installed: reason = ${details.reason}, previousVersion = ${details.previousVersion}`);
@@ -10,5 +11,8 @@ browser.runtime.onInstalled.addListener(async details => {
 
 // Delay to prevent re-ordering tabs on startup.
 (async function() {
-    setTimeout(init, await storage.startupDelay.get());
+    setTimeout(() => {
+        logger.init();
+        TabManager.init();
+    }, await storage.startupDelay.get());
 }());

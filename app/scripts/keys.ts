@@ -1,15 +1,11 @@
 import { browser } from 'webextension-polyfill-ts';
+import { Message } from './messages';
 
 const SHIFT = 16;
 const CTRL = 17;
 
 export var ctrl = false;
 export var shift = false;
-
-interface KeyMessage {
-    action: 'keydown' | 'keyup';
-    key: number;
-}
 
 function setKey(key: number, state: boolean) {
     switch (key) {
@@ -23,7 +19,7 @@ function setKey(key: number, state: boolean) {
     }
 }
 
-browser.runtime.onMessage.addListener((message: KeyMessage, sender) => {
+browser.runtime.onMessage.addListener((message: Message) => {
     switch (message.action) {
         case 'keydown':
             setKey(message.key, true);

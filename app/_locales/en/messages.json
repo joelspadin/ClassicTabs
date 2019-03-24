@@ -127,5 +127,17 @@
     "tabCloseWaitTimeNote": {
         "message": "Try increasing this if the wrong tab gets focused after closing a tab.",
         "description": "Describes when the 'Tab close wait time' setting should be changed"
+    },
+    "enableLogging": {
+        "message": "Enable logging",
+        "description": "Logs tab and window events for debugging"
+    },
+    "clearLog": {
+        "message": "Clear log",
+        "description": "Clears all messages from the log"
+    },
+    "copyLog": {
+        "message": "Copy to clipboard",
+        "description": "Copies all messages in the log to the clipboard"
     }
 }

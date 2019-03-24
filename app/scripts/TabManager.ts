@@ -2,6 +2,7 @@ import { browser, Windows, Tabs } from 'webextension-polyfill-ts';
 import { storage, StorageItems } from './storage';
 import { WindowState } from './WindowState';
 import * as keys from './keys';
+import * as logger from './logger';
 
 let settings: StorageItems;
 let windowStates: Record<number, WindowState> = {};
@@ -125,6 +126,8 @@ async function moveNextToActive(tab: Tabs.Tab, windowId?: number) {
     }
 
     if (active !== undefined) {
+        logger.enabled && logger.log(`moving tab ${tab.id} next to active tab ${active}`);
+
         await moveNextToTab(tab, active);
         state.inOrderTab = tab.id;
     }
@@ -144,6 +147,8 @@ async function moveNextToTab(tab: Tabs.Tab, neighbor: Tabs.Tab | number) {
     }
 
     if (tab.index !== pos.index || tab.windowId !== pos.windowId) {
+        logger.enabled && logger.log(`moving tab ${tab.id} to position ${pos.index}`);
+
         await browser.tabs.move(tab.id, pos);
     }
 }
@@ -163,6 +168,8 @@ async function moveToEnd(tab: Tabs.Tab, windowId?: number) {
         }
     }
 
+    logger.enabled && logger.log(`moving tab ${tab.id} to end`);
+
     await browser.tabs.move(tab.id, { index: -1, windowId });
 }
 
@@ -171,6 +178,8 @@ async function moveToWindow(tab: Tabs.Tab, windowId: number) {
         console.warn('Cannot move tab with no ID:', tab);
         return;
     }
+
+    logger.enabled && logger.log(`moving tab ${tab.id} to window ${windowId}`);
 
     switch (settings.onOpen) {
         case 'nextToActive':
@@ -248,6 +257,8 @@ async function onTabRemoved(id: number, info: Tabs.OnRemovedRemoveInfoType) {
     // removed tab will be the second most-recent tab in the window's history.
     const wasActive = activeChanged && state.history.second === id;
 
+    logger.enabled && logger.log(`activeChanged = ${activeChanged}, wasActive = ${wasActive}`);
+
     // If we are overriding which tab gets focused after removing a tab, and the
     // removed tab was active, rewind the state by one because the browser will
     // focus some other tab before telling us a tab was removed.
@@ -262,6 +273,8 @@ async function onTabRemoved(id: number, info: Tabs.OnRemovedRemoveInfoType) {
         switch (settings.onClose) {
             case 'lastfocused':
                 const newTab = state.history.first;
+                logger.enabled && logger.log(`focusing last-focused tab ${newTab}`);
+
                 if (newTab !== undefined) {
                     await focusTab(newTab);
                 }
@@ -272,6 +285,9 @@ async function onTabRemoved(id: number, info: Tabs.OnRemovedRemoveInfoType) {
                 // If 'next', the next tab will be in the closing tab's old position.
                 // If 'previous', focus the tab right before that, or the leftmost tab.
                 let index = state.activeTabIndex;
+
+                logger.enabled && logger.log(`focusing ${settings.onClose} tab from position ${index}`);
+
                 if (index !== undefined) {
                     if (settings.onClose === 'previous') {
                         index = Math.max(0, index - 1);
@@ -345,6 +361,8 @@ async function positionNewWindowTab(tab: Tabs.Tab) {
             }
 
             if (tab.windowId != opener.windowId) {
+                logger.enabled && logger.log(`returning ${tab.id} to window ${opener.windowId}`);
+
                 await moveToWindow(tab, opener.windowId);
                 // TODO: focus tab here?
             }

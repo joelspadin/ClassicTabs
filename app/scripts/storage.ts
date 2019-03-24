@@ -26,6 +26,9 @@ export interface StorageItems {
     startupDelay: number;
     /** Time to wait in milliseconds when checking if a tab was closed immediately after a focus change. */
     activeChangedTimeout: number;
+
+    /** If true, log all tab events. */
+    logEnabled: boolean;
 }
 
 export const storage = StorageArea.create<StorageItems>({
@@ -41,5 +44,7 @@ export const storage = StorageArea.create<StorageItems>({
 
         startupDelay: 2000,
         activeChangedTimeout: 100,
+
+        logEnabled: false,
     }
 });

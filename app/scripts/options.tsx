@@ -4,6 +4,7 @@ import Modal from 'react-modal';
 import { useEffect } from 'react';
 
 import { storage } from './storage';
+import { LogViewer } from './LogViewer';
 import {
     Checkbox,
     Expand,
@@ -45,6 +46,7 @@ const OptionsApp: React.FunctionComponent = () => {
 
     const [onOpen] = useStore(storage.onOpen, 'default');
     const [focusOnOpen] = useStore(storage.focusOnOpen, 'default');
+    const [logEnabled] = useStore(storage.logEnabled, false);
 
     return (
         <>
@@ -139,6 +141,18 @@ const OptionsApp: React.FunctionComponent = () => {
                         />
                     <ResetButton label={useMessage('default')} accessor={storage.activeChangedTimeout} />
                 </SettingsRow>
+
+                <SettingsRow>
+                    <Checkbox label={useMessage('enableLogging')}
+                        description={useMessage('enableLoggingNote')}
+                        accessor={storage.logEnabled}
+                        />
+                </SettingsRow>
+                <Expand isOpen={logEnabled}>
+                    {logEnabled &&
+                        <LogViewer />
+                    }
+                </Expand>
             </SettingsSection>
 
             <SettingsSection title="Frequently Asked Questions">
