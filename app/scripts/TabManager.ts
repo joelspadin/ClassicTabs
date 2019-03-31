@@ -253,16 +253,21 @@ async function onTabRemoved(id: number, info: Tabs.OnRemovedRemoveInfoType) {
 
     // Since we don't have a good way of determining whether the removed tab was
     // previously the active tab, make an educated guess based on the fact that
-    // the browser will focus some other tab before we get this message, so the
-    // removed tab will be the second most-recent tab in the window's history.
-    const wasActive = activeChanged && state.history.second === id;
+    // the browser may focus some other tab before we get this message, so the
+    // removed tab will be either:
+    // 1. The most-recent tab in the window's history
+    // 2. The second most-recent tab in the window's history, and the active
+    //    window was just changed.
+    const browserChangedFocus = activeChanged && id === state.history.second;
 
-    logger.enabled && logger.log(`activeChanged = ${activeChanged}, wasActive = ${wasActive}`);
+    const wasActive = browserChangedFocus || id === state.history.first;
+
+    logger.enabled && logger.log(`wasActive = ${wasActive}, activeChanged = ${activeChanged}, browserChangedFocus = ${browserChangedFocus}`);
 
     // If we are overriding which tab gets focused after removing a tab, and the
-    // removed tab was active, rewind the state by one because the browser will
-    // focus some other tab before telling us a tab was removed.
-    if (wasActive && settings.onClose !== 'default') {
+    // browser focused some other tab before telling us which tab was removed,
+    // rewind the state by one to ignore the unwanted change made by the browser.
+    if (browserChangedFocus && settings.onClose !== 'default') {
         state.rewind();
     }
 
