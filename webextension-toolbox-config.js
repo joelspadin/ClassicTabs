@@ -3,12 +3,23 @@ const {
     fixZipPackage,
     useCss,
     useExternal,
+    useLicenseChecker,
     useSourceMap,
     useTypescript,
 } = require('@spadin/webextension-build-utils');
 
+const allowedLicenses = [
+    'Apache-2.0',
+    'BSD-2-Clause',
+    'MIT',
+    'MPL-2.0',
+    'Zlib',
+];
+
 module.exports = {
     webpack: (config, { dev }) => {
+
+        useLicenseChecker(config, allowedLicenses);
 
         useSourceMap(config, dev);
 

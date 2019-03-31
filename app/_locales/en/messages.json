@@ -12,6 +12,27 @@
         "description": "The description of the application"
     },
 
+    "@options_reset_all_title": {
+        "message": "Reset all settings",
+        "description": "Title for a prompt confirming whether the user wants to reset all settings to their default values"
+    },
+    "@options_reset_all_message": {
+        "message": "Reset all settings to their default values?",
+        "description": "Message for a prompt confirming whether the user wants to reset all settings to their default values"
+    },
+    "@options_reset_button": {
+        "message": "Reset",
+        "description": "Button which resets all settings to their default values"
+    },
+    "@options_cancel_button": {
+        "message": "Cancel",
+        "description": "Button which cancels resetting all settings to their default values"
+    },
+    "@options_close_button": {
+        "message": "Close",
+        "description": "Button which closes a modal dialog window"
+    },
+
     "optionsTitle": {
         "message": "Classic Tabs Settings",
         "description": "Title for the options page"
@@ -139,5 +160,28 @@
     "copyLog": {
         "message": "Copy to clipboard",
         "description": "Copies all messages in the log to the clipboard"
+    },
+
+    "resetSettings": {
+        "message": "Reset settings",
+        "description": "Header for the option to reset all settings"
+    },
+    "restoreSettingsToDefaults": {
+        "message": "Restore settings to their original defaults",
+        "description": "Button to restore all settings to their defaults"
+    },
+
+    "frequentlyAskedQuestions": {
+        "message": "Frequently asked questions",
+        "description": "Header for "
+    },
+
+    "credits": {
+        "message": "Credits",
+        "description": "Header for a section with information about people who worked on the extension and 3rd party libraries"
+    },
+    "thirdPartyCredits": {
+        "message": "Third-party credits",
+        "description": "Displays third-party library license information"
     }
 }

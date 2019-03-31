@@ -4,7 +4,8 @@ import Modal from 'react-modal';
 import { useEffect } from 'react';
 
 import { storage } from './storage';
-import { LogViewer } from './LogViewer';
+import { LogViewer } from './components/LogViewer';
+import { ThirdPartyCredits } from './components/ThirdPartyCredits';
 import {
     Checkbox,
     Expand,
@@ -155,7 +156,17 @@ const OptionsApp: React.FunctionComponent = () => {
                 </Expand>
             </SettingsSection>
 
-            <SettingsSection title="Frequently Asked Questions">
+            <SettingsSection title={useMessage('resetSettings')}>
+                <SettingsRow>
+                    <ResetButton
+                        label={useMessage('restoreSettingsToDefaults')}
+                        storage={storage}
+                        confirm={true}
+                        />
+                </SettingsRow>
+            </SettingsSection>
+
+            <SettingsSection title={useMessage('frequentlyAskedQuestions')}>
                 <InfoRow>
                     <h4>Something is broken!</h4>
                     <p>
@@ -225,6 +236,21 @@ const OptionsApp: React.FunctionComponent = () => {
                         Try <ExternalLink href="https://vivaldi.com">Vivaldi</ExternalLink>.
                     </p>
                 </InfoRow>
+            </SettingsSection>
+
+            <SettingsSection title={useMessage('credits')}>
+                <InfoRow>
+                    <p>
+                        Classic Tabs is open source software and is available on
+                        {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs">GitHub</ExternalLink>.
+                    </p>
+                    <p>
+                        Copyright &copy; 2013-2019 Joel Spadin
+                    </p>
+                </InfoRow>
+                <SettingsRow>
+                    <ThirdPartyCredits />
+                </SettingsRow>
             </SettingsSection>
         </main>
         </>
