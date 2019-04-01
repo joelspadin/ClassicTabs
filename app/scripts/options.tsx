@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 
 import { storage } from './storage';
 import { LogViewer } from './components/LogViewer';
+import { DarkModeToggle } from './components/DarkModeToggle';
 import { ThirdPartyCredits } from './components/ThirdPartyCredits';
 import {
     Checkbox,
@@ -54,6 +55,8 @@ const OptionsApp: React.FunctionComponent = () => {
         <header>
             <img src="../images/icon-64.png" />
             <h1>{title}</h1>
+
+            <DarkModeToggle className="right" />
         </header>
         <main>
             <SettingsSection title={useMessage('whenOpeningTab')}>

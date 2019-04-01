@@ -41,6 +41,10 @@
         "message": "Default",
         "description": "Resets a setting to its default value"
     },
+    "darkMode": {
+        "message": "Dark mode",
+        "description": "Toggles whether dark mode is enabled"
+    },
 
     "whenOpeningTab": {
         "message": "When opening a tab",

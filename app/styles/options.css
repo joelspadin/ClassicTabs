@@ -11,3 +11,8 @@
 .button-row button {
     margin-inline-start: 20px;
 }
+
+.right {
+    position: absolute;
+    right: 0;
+}

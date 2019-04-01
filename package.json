@@ -28,6 +28,7 @@
     "@spadin/webextension-options": "^1.2.1",
     "@spadin/webextension-storage": "^1.0.3",
     "react-modal": "^3.8.1",
-    "react-textarea-autosize": "^7.1.0"
+    "react-textarea-autosize": "^7.1.0",
+    "use-dark-mode": "^2.3.1"
   }
 }
