@@ -89,8 +89,8 @@ function isFocusExceptionKeyHeld() {
 }
 
 function isStartPage(tab: Tabs.Tab) {
-    // TODO: add support for browsers other than Opera.
-    return tab.url && tab.url == 'opera://startpage';
+    // TODO: add support for browsers other than Opera/Chrome.
+    return tab.url && tab.url == 'chrome://startpage/';
 }
 
 async function moveNextToActive(tab: Tabs.Tab, windowId?: number) {
