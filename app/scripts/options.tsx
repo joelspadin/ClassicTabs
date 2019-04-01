@@ -1,26 +1,27 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import * as ReactDOM from 'react-dom';
 import Modal from 'react-modal';
-import { useEffect } from 'react';
 
-import { storage } from './storage';
-import { LogViewer } from './components/LogViewer';
-import { DarkModeToggle } from './components/DarkModeToggle';
-import { ThirdPartyCredits } from './components/ThirdPartyCredits';
 import {
+    applyStyle,
     Checkbox,
     Expand,
     InfoRow,
+    Number,
+    Radio,
+    RadioGroup,
+    ResetButton,
     SettingsRow,
     SettingsSection,
-    RadioGroup,
-    Radio,
-    useStore,
-    applyStyle,
     useMessage,
-    Number,
-    ResetButton,
+    useStore,
 } from '@spadin/webextension-options';
+
+import { DarkModeToggle } from './components/DarkModeToggle';
+import { LogViewer } from './components/LogViewer';
+import { ThirdPartyCredits } from './components/ThirdPartyCredits';
+import { storage } from './storage';
 
 applyStyle();
 
@@ -36,7 +37,7 @@ const ExternalLink: React.FunctionComponent<LinkProps> = (props) => {
             {props.children}
         </a>
     );
-}
+};
 
 const OptionsApp: React.FunctionComponent = () => {
     const title = useMessage('optionsTitle');
@@ -69,7 +70,7 @@ const OptionsApp: React.FunctionComponent = () => {
                             </div>
                         </Radio>
                         <Radio value="nextToActive">{useMessage('openTabNextToActive')}</Radio>
-                        <Expand isOpen={onOpen == 'nextToActive'}>
+                        <Expand isOpen={onOpen === 'nextToActive'}>
                             <SettingsRow>
                                 <Checkbox label={useMessage('placeTabsInOrder')} accessor={storage.openInOrder} />
                             </SettingsRow>
@@ -101,7 +102,7 @@ const OptionsApp: React.FunctionComponent = () => {
                     <RadioGroup accessor={storage.focusOnOpen}>
                         <Radio value="default">{useMessage('openLinkDefault')}</Radio>
                         <Radio value="always">{useMessage('focusNewTab')}</Radio>
-                        <Expand isOpen={focusOnOpen == 'always'}>
+                        <Expand isOpen={focusOnOpen === 'always'}>
                             <SettingsRow>
                                 <Checkbox label={useMessage('openBackgroundCtrl')} accessor={storage.exceptCtrl} />
                             </SettingsRow>
@@ -174,16 +175,18 @@ const OptionsApp: React.FunctionComponent = () => {
                     <h4>Something is broken!</h4>
                     <p>
                         Check if someone else has reported the issue on
-                        {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs/issues">GitHub</ExternalLink>.
-                        If not, create a new issue, and let me know what you expected to happen
-                        and what actually happened instead.
+                        {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs/issues">
+                            GitHub
+                        </ExternalLink>. If not, create a new issue, and let me
+                        know what you expected to happen and what actually
+                        happened instead.
                     </p>
                 </InfoRow>
 
                 <InfoRow>
                     <h4>
-                        Can you make <code>Ctrl+T</code> open tabs next to the active tab
-                        but the new tab button open them at the end?
+                        Can you make <code>Ctrl+T</code> open tabs next to the
+                        active tab but the new tab button open them at the end?
                     </h4>
                     <p>
                         Nope. As far as Opera is concerned, new tabs are new tabs.
@@ -213,13 +216,17 @@ const OptionsApp: React.FunctionComponent = () => {
                     <p>
                         Maybe. Opera has implemented the chrome.commands API, but some functions
                         aren't available to extensions. Create an issue on
-                        {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs/issues">GitHub</ExternalLink>{' '}
-                        requesting a feature and I'll let you know if it's possible.
+                        {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs/issues">
+                            GitHub
+                        </ExternalLink> requesting a feature and I'll let you know if it's possible.
                     </p>
                 </InfoRow>
 
                 <InfoRow>
-                    <h4>Can you make <code>&lt;mouse command&gt;</code> on a tab do <code>&lt;cool feature&gt;</code>?</h4>
+                    <h4>
+                        Can you make <code>&lt;mouse command&gt;</code> on a tab
+                        do <code>&lt;cool feature&gt;</code>?
+                    </h4>
                     <p>
                         No. Browser extensions have very limited access to the browser's UI.
                         They cannot tell when you click on a tab.
@@ -258,7 +265,7 @@ const OptionsApp: React.FunctionComponent = () => {
         </main>
         </>
     );
-}
+};
 
 addEventListener('DOMContentLoaded', () => {
     ReactDOM.render(<OptionsApp />, document.getElementById('app'));

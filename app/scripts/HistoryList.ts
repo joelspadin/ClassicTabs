@@ -17,7 +17,7 @@ export class HistoryList {
     }
 
     public remove(id: number) {
-        let index = this.items.indexOf(id);
+        const index = this.items.indexOf(id);
         if (index >= 0) {
             this.items.splice(index, 1);
         }

@@ -1,7 +1,8 @@
 import { browser } from 'webextension-polyfill-ts';
+
+import * as logger from './logger';
 import { storage } from './storage';
 import * as TabManager from './TabManager';
-import * as logger from './logger';
 
 browser.runtime.onInstalled.addListener(async details => {
     console.info(`Installed: reason = ${details.reason}, previousVersion = ${details.previousVersion}`);

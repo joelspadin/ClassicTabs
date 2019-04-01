@@ -6,8 +6,8 @@ const CTRL = 17;
 function sendModifiers(e: KeyboardEvent) {
     if (e.which === SHIFT || e.which === CTRL) {
         browser.runtime.sendMessage({
-            key: e.which,
             action: e.type,
+            key: e.which,
         });
     }
 }

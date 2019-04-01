@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { FileViewer, useMessage } from '@spadin/webextension-options';
 
 /**
@@ -11,4 +12,4 @@ export const ThirdPartyCredits: React.FunctionComponent = () => {
             file="ThirdPartyNotices.txt"
             />
     );
-}
+};

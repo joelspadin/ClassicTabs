@@ -1,11 +1,13 @@
-import { browser, Windows, Tabs } from 'webextension-polyfill-ts';
-import { storage, StorageItems } from './storage';
-import { WindowState } from './WindowState';
+import { browser, Tabs, Windows } from 'webextension-polyfill-ts';
+
 import * as keys from './keys';
 import * as logger from './logger';
+import { storage, StorageItems } from './storage';
+import { WindowState } from './WindowState';
+
+const windowStates: Record<number, WindowState> = {};
 
 let settings: StorageItems;
-let windowStates: Record<number, WindowState> = {};
 let activeChanged = false;
 
 export async function init() {
@@ -71,7 +73,7 @@ async function initActiveTabs() {
     const activeTabs = await browser.tabs.query({ active: true});
 
     for (const tab of activeTabs) {
-        if (tab.windowId === undefined || tab.id == undefined) {
+        if (tab.windowId === undefined || tab.id === undefined) {
             continue;
         }
 
@@ -90,7 +92,7 @@ function isFocusExceptionKeyHeld() {
 
 function isStartPage(tab: Tabs.Tab) {
     // TODO: add support for browsers other than Opera/Chrome.
-    return tab.url && tab.url == 'chrome://startpage/';
+    return tab.url && tab.url === 'chrome://startpage/';
 }
 
 async function moveNextToActive(tab: Tabs.Tab, windowId?: number) {
@@ -262,7 +264,8 @@ async function onTabRemoved(id: number, info: Tabs.OnRemovedRemoveInfoType) {
 
     const wasActive = browserChangedFocus || id === state.history.first;
 
-    logger.enabled && logger.log(`wasActive = ${wasActive}, activeChanged = ${activeChanged}, browserChangedFocus = ${browserChangedFocus}`);
+    logger.enabled && logger.log(
+        `wasActive = ${wasActive}, activeChanged = ${activeChanged}, browserChangedFocus = ${browserChangedFocus}`);
 
     // If we are overriding which tab gets focused after removing a tab, and the
     // browser focused some other tab before telling us which tab was removed,
@@ -316,7 +319,7 @@ function onWindowCreated(window: Windows.Window) {
     if (window.tabs) {
         const state = getWindowState(window.id);
 
-        for (const tab of window.tabs.filter(tab => tab.active)) {
+        for (const tab of window.tabs.filter(t => t.active)) {
             if (tab.id === undefined) {
                 continue;
             }
@@ -365,7 +368,7 @@ async function positionNewWindowTab(tab: Tabs.Tab) {
                 return;
             }
 
-            if (tab.windowId != opener.windowId) {
+            if (tab.windowId !== opener.windowId) {
                 logger.enabled && logger.log(`returning ${tab.id} to window ${opener.windowId}`);
 
                 await moveToWindow(tab, opener.windowId);
@@ -393,7 +396,7 @@ function shouldPreventNewWindow() {
 
 function wait(milliseconds: number) {
     return new Promise(resolve => {
-        setTimeout(() =>{
+        setTimeout(() => {
             resolve();
         }, milliseconds);
     });

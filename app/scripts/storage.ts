@@ -33,18 +33,16 @@ export interface StorageItems {
 
 export const storage = StorageArea.create<StorageItems>({
     defaults: {
-        onOpen: 'default',
-        onClose: 'default',
-        focusOnOpen: 'default',
+        activeChangedTimeout: 100,
         exceptCtrl: true,
         exceptShift: false,
+        focusOnOpen: 'default',
+        logEnabled: false,
+        onClose: 'default',
+        onOpen: 'default',
         openInOrder: true,
         preventNewWindow: false,
         preventWindowPopups: false,
-
         startupDelay: 2000,
-        activeChangedTimeout: 100,
-
-        logEnabled: false,
-    }
+    },
 });

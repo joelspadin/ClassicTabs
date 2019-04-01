@@ -2,25 +2,27 @@
 // This will help to prevent a flash if dark mode is the default.
 
 (function() {
-    var storageKey = 'darkMode';
-    var classNameDark = 'dark-theme';
-    var classNameLight = 'light-theme';
+    const storageKey = 'darkMode';
+    const classNameDark = 'dark-theme';
+    const classNameLight = 'light-theme';
 
     function setClassOnDocumentBody(darkMode: boolean) {
         document.documentElement.classList.add(darkMode ? classNameDark : classNameLight);
         document.documentElement.classList.remove(darkMode ? classNameLight : classNameDark);
     }
 
-    var preferDarkQuery = '(prefers-color-scheme: dark)';
-    var mql = window.matchMedia(preferDarkQuery);
-    var supportsColorSchemeQuery = mql.media === preferDarkQuery;
-    var localStorageTheme = null;
+    const preferDarkQuery = '(prefers-color-scheme: dark)';
+    const mql = window.matchMedia(preferDarkQuery);
+    const supportsColorSchemeQuery = mql.media === preferDarkQuery;
+    let localStorageTheme = null;
 
     try {
         localStorageTheme = localStorage.getItem(storageKey);
-    } catch (err) {}
+    } catch (err) {
+        // Ignore.
+    }
 
-    var localStorageExists = false;
+    let localStorageExists = false;
     if (localStorageTheme !== null) {
         localStorageExists = true;
         localStorageTheme = JSON.parse(localStorageTheme);
@@ -36,7 +38,7 @@
         localStorage.setItem(storageKey, JSON.stringify(mql.matches));
     } else {
         // source of truth from document.documentElement
-        var isDarkMode = document.documentElement.classList.contains(classNameDark);
+        const isDarkMode = document.documentElement.classList.contains(classNameDark);
         localStorage.setItem(storageKey, JSON.stringify(isDarkMode));
     }
   })();

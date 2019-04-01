@@ -4,8 +4,8 @@ import { Message } from './messages';
 const SHIFT = 16;
 const CTRL = 17;
 
-export var ctrl = false;
-export var shift = false;
+export let ctrl = false;
+export let shift = false;
 
 function setKey(key: number, state: boolean) {
     switch (key) {

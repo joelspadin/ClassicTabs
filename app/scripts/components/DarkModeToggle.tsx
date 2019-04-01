@@ -1,5 +1,6 @@
 import * as React from 'react';
 import useDarkMode from 'use-dark-mode';
+
 import { useMessage } from '@spadin/webextension-options';
 
 export interface DarkmodeToggle {
@@ -26,4 +27,4 @@ export const DarkModeToggle: React.FunctionComponent<DarkmodeToggle> = (props) =
                 />
         </span>
     );
-}
+};

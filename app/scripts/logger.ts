@@ -1,6 +1,7 @@
 import { browser, Tabs, Windows } from 'webextension-polyfill-ts';
-import { storage } from './storage';
+
 import { Message } from './messages';
+import { storage } from './storage';
 
 const MAX_LOG_SIZE = 100;
 
@@ -51,7 +52,7 @@ export function clearLog() {
 async function updateEnabled() {
     const newEnabled = await storage.logEnabled.get();
 
-    if (newEnabled != enabled) {
+    if (newEnabled !== enabled) {
         if (newEnabled) {
             beginLogging();
         } else {

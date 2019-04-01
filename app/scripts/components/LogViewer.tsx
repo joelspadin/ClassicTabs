@@ -1,7 +1,8 @@
-import { browser } from 'webextension-polyfill-ts';
 import * as React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { browser } from 'webextension-polyfill-ts';
+
 import { useMessage } from '@spadin/webextension-options';
 
 export interface LogViewerProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -54,12 +55,12 @@ export const LogViewer: React.FunctionComponent<LogViewerProps> = (props) => {
             </div>
         </>
     );
-}
+};
 
 export default LogViewer;
 
-function useInterval(callback: Function, delay: number) {
-    const savedCallback = useRef<Function>(callback);
+function useInterval(callback: () => void, delay: number) {
+    const savedCallback = useRef<() => void>(callback);
 
     useEffect(() => {
         savedCallback.current = callback;

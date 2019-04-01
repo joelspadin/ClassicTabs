@@ -1,0 +1,26 @@
+{
+    "extends": "tslint:recommended",
+    "rules": {
+        "arrow-parens": false,
+        "interface-name": false,
+        "no-console": [true, "log"],
+        "no-unused-expression": [true, "allow-fast-null-checks", "allow-new"],
+        "one-line": [true, "check-open-brace"],
+        "only-arrow-functions": false,
+        "quotemark": [
+            true,
+            "single",
+            "jsx-double",
+            "avoid-escape",
+            "avoid-template"
+        ],
+        "variable-name": [
+            true,
+            "ban-keywords",
+            "check-format",
+            "allow-leading-underscore",
+            "require-const-for-all-caps",
+            "allow-pascal-case"
+        ]
+    }
+}

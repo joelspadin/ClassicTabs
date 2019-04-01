@@ -1,15 +1,16 @@
 
-import { HistoryList } from './HistoryList';
 import { browser } from 'webextension-polyfill-ts';
 
+import { HistoryList } from './HistoryList';
+
 export class WindowState {
+    public history = new HistoryList();
+
     private _currentInOrderTab: number | undefined = undefined;
     private _lastInOrderTab: number | undefined = undefined;
     private _currentActiveTabIndex: number | undefined = undefined;
     private _lastActiveTabIndex: number | undefined = undefined;
     private updatingIndex: boolean = false;
-
-    public history = new HistoryList();
 
     /**
      * Gets the index of the window's active tab.
@@ -49,7 +50,7 @@ export class WindowState {
         this.updatingIndex = true;
 
         try {
-            let tab = await browser.tabs.get(id);
+            const tab = await browser.tabs.get(id);
 
             // Make sure the current tab hasn't changed since we started.
             if (this.history.first === id) {
