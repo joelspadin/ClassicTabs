@@ -1,0 +1,191 @@
+{
+    "appName": {
+        "message": "Classic Tabs",
+        "description": "The name of the application"
+    },
+    "appShortName": {
+        "message": "Classic Tabs",
+        "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+    },
+    "appDescription": {
+        "message": "Classic Tabs brings back some of the extra tab options from Opera 12.",
+        "description": "The description of the application"
+    },
+
+    "@options_reset_all_title": {
+        "message": "Reset all settings",
+        "description": "Title for a prompt confirming whether the user wants to reset all settings to their default values"
+    },
+    "@options_reset_all_message": {
+        "message": "Reset all settings to their default values?",
+        "description": "Message for a prompt confirming whether the user wants to reset all settings to their default values"
+    },
+    "@options_reset_button": {
+        "message": "Reset",
+        "description": "Button which resets all settings to their default values"
+    },
+    "@options_cancel_button": {
+        "message": "Cancel",
+        "description": "Button which cancels resetting all settings to their default values"
+    },
+    "@options_close_button": {
+        "message": "Close",
+        "description": "Button which closes a modal dialog window"
+    },
+
+    "optionsTitle": {
+        "message": "Classic Tabs Settings",
+        "description": "Title for the options page"
+    },
+    "default": {
+        "message": "Default",
+        "description": "Resets a setting to its default value"
+    },
+    "darkMode": {
+        "message": "Dark mode",
+        "description": "Toggles whether dark mode is enabled"
+    },
+
+    "whenOpeningTab": {
+        "message": "When opening a tab",
+        "description": "Header for the section controlling behavior when opening tabs"
+    },
+    "openTabDefault": {
+        "message": "Let the browser decide",
+        "description": "Use the browser's default behavior for opening tabs"
+    },
+    "openTabDefaultNote": {
+        "message": "Opens new tabs except Speed Dial next to the active tab",
+        "description": "A note explaining the browser's default behavior for opening tabs"
+    },
+    "openTabNextToActive": {
+        "message": "Open all tabs next to the active tab",
+        "description": "All new tabs will be placed next to the active tab"
+    },
+    "placeTabsInOrder": {
+        "message": "Place consecutive new tabs in order",
+        "description": "If multiple new tabs are opened from the same parent tab, they will be placed in the order they were opened"
+    },
+    "openSpeedDialNextToActive": {
+        "message": "Open Speed Dial next to the active tab and other tabs at the end",
+        "description": "Speed Dial will be placed next to the active tab, and all other tabs will be placed at the end of the tab bar"
+    },
+    "openTabAtEnd": {
+        "message": "Open all tabs at the end",
+        "description": "All next tabs will be placed at the end of the tab bar"
+    },
+
+    "whenClosingTab": {
+        "message": "When closing a tab",
+        "description": "Header for the section controlling behavior when closing tabs"
+    },
+    "closeTabDefault": {
+        "message": "Let the browser decide",
+        "description": "Use the browser's default behavior for closing tabs"
+    },
+    "closeTabDefaultNote": {
+        "message": "Focuses the tab from which the tab was opened, or the next tab if no such tab exists",
+        "description": "A note explaining the browser's default behavior for opening tabs"
+    },
+    "activateLastActiveTab": {
+        "message": "Focus the last-active tab",
+        "description": "When a tab is closed, the tab that was active prior to the closed tab will be re-activated"
+    },
+    "activateNextTab": {
+        "message": "Focus the next tab",
+        "description": "When a tab is closed, the tab to its right will be activated"
+    },
+    "activatePreviousTab": {
+        "message": "Focus the previous tab",
+        "description": "When a tab is closed, the tab to its left will be activated"
+    },
+
+    "whenOpeningLinkInNewTab": {
+        "message": "When opening a link in a new tab",
+        "description": "Header for the section controlling opening links in new tabs"
+    },
+    "openLinkDefault": {
+        "message": "Let the browser decide if the new tab should be focused",
+        "description": "Use the browser's default behavior for opening links in new tabs"
+    },
+    "focusNewTab": {
+        "message": "Focus the new tab",
+        "description": "When a link is opened in a new tab, focus will be switched to it"
+    },
+    "openBackgroundCtrl": {
+        "message": "Open in background when holding Ctrl",
+        "description": "When 'focusNewTab' is active, holding the Ctrl key overrides it and opens the new tab in the background"
+    },
+    "openBackgroundShift": {
+        "message": "Open in background when holding Shift",
+        "description": "When 'focusNewTab' is active, holding the Shift key overrides it and opens the new tab in the background"
+    },
+    "shiftClickSameWindow": {
+        "message": "Shift + Click opens tabs in the same window",
+        "description": "Override's the browser's default behavior of opening links in a new window when the Shift key is held, and forces them to open in the same window"
+    },
+    "ctrlShiftNote": {
+        "message": "Features that rely on Ctrl and Shift will not work on internal pages such as Speed Dial and settings. Switching to one of these tabs with Ctrl or Shift held may also break these features. If this happens, press and release the keys on a non-internal page and try again.",
+        "description": "A note explaining that the extension cannot track the Ctrl and Shift keys on internal pages such as Speed Dial and settings, and that pressing and releasing the keys on a non-internal page will fix it."
+    },
+    "preventNewWindows": {
+        "message": "Prevent all tabs from opening new windows",
+        "description": "Forces all new tabs to open in the same window"
+    },
+
+    "advancedSettings": {
+        "message": "Advanced settings",
+        "description": "Header for the section with advanced settings"
+    },
+    "startupDelay": {
+        "message": "Startup delay",
+        "description": "Adjusts how long the extension waits after the browser starts up before it starts controlling tabs"
+    },
+    "startupDelayNote": {
+        "message": "Try increasing this if tabs get moved around when you start Opera.",
+        "description": "Describes when the 'Startup delay' setting should be changed"
+    },
+    "tabCloseWaitTime": {
+        "message": "Tab close wait time",
+        "description": "Adjusts how long the extension waits when figuring out if Opera switched tab focus when closing a tab"
+    },
+    "tabCloseWaitTimeNote": {
+        "message": "Try increasing this if the wrong tab gets focused after closing a tab.",
+        "description": "Describes when the 'Tab close wait time' setting should be changed"
+    },
+    "enableLogging": {
+        "message": "Enable logging",
+        "description": "Logs tab and window events for debugging"
+    },
+    "clearLog": {
+        "message": "Clear log",
+        "description": "Clears all messages from the log"
+    },
+    "copyLog": {
+        "message": "Copy to clipboard",
+        "description": "Copies all messages in the log to the clipboard"
+    },
+
+    "resetSettings": {
+        "message": "Reset settings",
+        "description": "Header for the option to reset all settings"
+    },
+    "restoreSettingsToDefaults": {
+        "message": "Restore settings to their original defaults",
+        "description": "Button to restore all settings to their defaults"
+    },
+
+    "frequentlyAskedQuestions": {
+        "message": "Frequently asked questions",
+        "description": "Header for "
+    },
+
+    "credits": {
+        "message": "Credits",
+        "description": "Header for a section with information about people who worked on the extension and 3rd party libraries"
+    },
+    "thirdPartyCredits": {
+        "message": "Third-party credits",
+        "description": "Displays third-party library license information"
+    }
+}

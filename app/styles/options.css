@@ -1,0 +1,18 @@
+.button-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    padding-inline-start: 20px;
+    padding-inline-end: 20px;
+    margin-bottom: 20px;
+}
+
+.button-row button {
+    margin-inline-start: 20px;
+}
+
+.right {
+    position: absolute;
+    right: 0;
+}

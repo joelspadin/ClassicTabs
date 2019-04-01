@@ -1,0 +1,15 @@
+{
+    "extends": "./node_modules/@spadin/tsconfig/base",
+    "compilerOptions": {
+        "module": "commonjs",
+        "declaration": false,
+        "jsx": "react",
+        "outDir": "./dist/tsc",
+        "sourceMap": true,
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "es7"
+        ]
+    }
+}

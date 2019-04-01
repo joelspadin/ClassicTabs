@@ -1,0 +1,34 @@
+{
+  "name": "classic-tabs",
+  "version": "2.0.0-beta.2",
+  "description": "Classic Tabs brings back some of the extra tab options from Opera 12.",
+  "scripts": {
+    "dev": "webextension-toolbox dev",
+    "build": "webextension-toolbox build",
+    "relink": "npm link @spadin/webextension-options @spadin/webextension-storage @spadin/webextension-build-utils @spadin/tsconfig"
+  },
+  "author": "Joel Spadin <joelspadin@gmail.com>",
+  "license": "BSD-2-Clause",
+  "repository": "https://github.com/ChaosinaCan/ClassicTabs",
+  "devDependencies": {
+    "@spadin/tsconfig": "^1.1.0",
+    "@spadin/webextension-build-utils": "^1.1.0",
+    "@types/chrome": "0.0.81",
+    "@types/react": "^16.8.10",
+    "@types/react-dom": "^16.8.3",
+    "@types/react-modal": "^3.8.1",
+    "@types/react-textarea-autosize": "^4.3.3",
+    "license-checker-webpack-plugin": "0.0.9",
+    "tslint": "^5.14.0",
+    "typescript": "^3.4.1",
+    "webextension-polyfill-ts": "^0.9.0",
+    "webextension-toolbox": "latest"
+  },
+  "dependencies": {
+    "@spadin/webextension-options": "^1.2.1",
+    "@spadin/webextension-storage": "^1.0.3",
+    "react-modal": "^3.8.1",
+    "react-textarea-autosize": "^7.1.0",
+    "use-dark-mode": "^2.3.1"
+  }
+}
