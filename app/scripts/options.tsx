@@ -214,7 +214,7 @@ const OptionsApp: React.FunctionComponent = () => {
                 <InfoRow>
                     <h4>Can you make <code>&lt;keyboard shortcut&gt;</code> do <code>&lt;cool feature&gt;</code>?</h4>
                     <p>
-                        Maybe. Opera has implemented the chrome.commands API, but some functions
+                        Maybe. Opera has implemented the commands API, but some functions
                         aren't available to extensions. Create an issue on
                         {' '}<ExternalLink href="https://github.com/ChaosinaCan/ClassicTabs/issues">
                             GitHub

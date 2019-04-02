@@ -43,6 +43,7 @@
     ],
     "incognito": "spanning",
     "permissions": [
+        "clipboardWrite",
         "storage",
         "tabs",
         "<all_urls>"
