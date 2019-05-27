@@ -2,7 +2,7 @@
     "name": "__MSG_appName__",
     "short_name": "__MSG_appShortName__",
     "description": "__MSG_appDescription__",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "manifest_version": 2,
     "default_locale": "en",
     "author": "Joel Spadin",
@@ -21,7 +21,8 @@
         ],
         "persistent": true
     },
-    "options_ui": {
+    "__opera__options_page": "pages/options.html",
+    "__chrome|firefox|edge__options_ui": {
         "page": "pages/options.html",
         "__opera__chrome_style": false
     },
