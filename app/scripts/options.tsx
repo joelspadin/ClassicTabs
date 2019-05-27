@@ -19,25 +19,12 @@ import {
 } from '@spadin/webextension-options';
 
 import { DarkModeToggle } from './components/DarkModeToggle';
+import { ExternalLink } from './components/ExternalLink';
 import { LogViewer } from './components/LogViewer';
 import { ThirdPartyCredits } from './components/ThirdPartyCredits';
 import { storage } from './storage';
 
 applyStyle();
-
-interface LinkProps extends React.HTMLProps<HTMLAnchorElement> {
-}
-
-const ExternalLink: React.FunctionComponent<LinkProps> = (props) => {
-    return (
-        <a {...props}
-            rel="external noopener"
-            target="_blank"
-            >
-            {props.children}
-        </a>
-    );
-};
 
 const OptionsApp: React.FunctionComponent = () => {
     const title = useMessage('optionsTitle');
