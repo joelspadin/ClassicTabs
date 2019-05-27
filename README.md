@@ -2,7 +2,7 @@
 
 Classic Tabs brings back some of the extra tab options from Opera 12.
 
-See [the ClassicTabs extension page at opera.com](https://addons.opera.com/en/extensions/details/classic-tabs/) to install the latest stable version.
+See [the Classic Tabs extension page at opera.com](https://addons.opera.com/en/extensions/details/classic-tabs/) to install the latest stable version.
 
 Please use the [issues tab](https://github.com/ChaosinaCan/ClassicTabs/issues) above if you find a problem. I do get notified when an issue is filed on Opera's addons page, but GitHub's issues are easier for me to use.
 

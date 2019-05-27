@@ -1,8 +1,8 @@
 const {
     dedupeModules,
     fixZipPackage,
-    useCss,
     useExternal,
+    useImages,
     useLicenseChecker,
     useSourceMap,
     useTypescript,
@@ -25,7 +25,7 @@ module.exports = {
 
         useTypescript(config);
 
-        useCss(config, {
+        useImages(config, {
             optimizeImages: !dev,
         });
 
