@@ -7,10 +7,12 @@ const CTRL = 17;
 
 function sendModifiers(e: KeyboardEvent) {
     if (e.which === SHIFT || e.which === CTRL) {
-        chrome.runtime.sendMessage({
-            action: e.type,
-            key: e.which,
-        });
+        if (chrome.runtime) {
+            chrome.runtime.sendMessage({
+                action: e.type,
+                key: e.which,
+            });
+        }
     }
 }
 

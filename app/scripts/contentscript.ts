@@ -5,10 +5,12 @@ const CTRL = 17;
 
 function sendModifiers(e: KeyboardEvent) {
     if (e.which === SHIFT || e.which === CTRL) {
-        browser.runtime.sendMessage({
-            action: e.type,
-            key: e.which,
-        });
+        if (browser.runtime) {
+            browser.runtime.sendMessage({
+                action: e.type,
+                key: e.which,
+            });
+        }
     }
 }
 
